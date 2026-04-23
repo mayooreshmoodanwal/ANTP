@@ -1,0 +1,53 @@
+[package]
+name = "antp-edge-daemon"
+version = "0.1.0"
+edition = "2021"
+description = "ANTP Edge Daemon — Decentralized compute node agent"
+authors = ["ANTP Team"]
+license = "MIT"
+
+[lib]
+name = "antp_edge_daemon"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri v2
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# WebSocket client
+tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
+futures-util = "0.3"
+
+# System profiling (kernel-level hardware queries)
+sysinfo = "0.32"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rmp-serde = "1"
+
+# Cryptography
+sha2 = "0.10"
+hex = "0.4"
+
+# WASM sandbox execution
+wasmtime = "27"
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = "0.4"
+log = "0.4"
+env_logger = "0.11"
+once_cell = "1"
+parking_lot = "0.12"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

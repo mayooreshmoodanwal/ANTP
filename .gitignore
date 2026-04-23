@@ -1,0 +1,22 @@
+# Node.js
+node_modules/
+dist/
+build/
+npm-debug.log
+.env
+.env.local
+
+# Rust / Tauri
+target/
+Cargo.lock
+**/src-tauri/target/
+
+# System
+.DS_Store
+*.log
+*.pem
+
+# Editor
+.idea/
+.vscode/
+*.swp

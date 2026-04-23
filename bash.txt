@@ -1,0 +1,1141 @@
+bash 1
+{
+    "isRunning": true,
+    "intervalMs": 100,
+    "timeoutMs": 2000,
+    "breachedCount": 0,
+    "cloudFallbackUrl": "http://localhost:3001/shadow"
+}
+ayushkumarsingh@Ayushs-MacBook-Air ANTP % curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+info: downloading installer
+warn: It looks like you have an existing rustup settings file at:
+warn: /Users/ayushkumarsingh/.rustup/settings.toml
+warn: Rustup will install the default toolchain as specified in the settings file,
+warn: instead of the one inferred from the default host triple.
+
+Welcome to Rust!
+
+This will download and install the official compiler for the Rust
+programming language, and its package manager, Cargo.
+
+Rustup metadata and toolchains will be installed into the Rustup
+home directory, located at:
+
+  /Users/ayushkumarsingh/.rustup
+
+This can be modified with the RUSTUP_HOME environment variable.
+
+The Cargo home directory is located at:
+
+  /Users/ayushkumarsingh/.cargo
+
+This can be modified with the CARGO_HOME environment variable.
+
+The cargo, rustc, rustup and other commands will be added to
+Cargo's bin directory, located at:
+
+  /Users/ayushkumarsingh/.cargo/bin
+
+This path will then be added to your PATH environment variable by
+modifying the profile files located at:
+
+  /Users/ayushkumarsingh/.profile
+  /Users/ayushkumarsingh/.zshenv
+  /Users/ayushkumarsingh/.tcshrc
+
+You can uninstall at any time with rustup self uninstall and
+these changes will be reverted.
+
+Current installation options:
+
+
+   default host triple: aarch64-apple-darwin
+     default toolchain: stable (default)
+               profile: default
+  modify PATH variable: yes
+
+1) Proceed with standard installation (default - just press enter)
+2) Customize installation
+3) Cancel installation
+>1
+
+info: profile set to default
+info: default host triple is aarch64-apple-darwin
+warn: Updating existing toolchain, profile choice will be ignored
+info: syncing channel updates for stable-aarch64-apple-darwin
+info: default toolchain set to stable-aarch64-apple-darwin
+
+  stable-aarch64-apple-darwin unchanged - rustc 1.95.0 (59807616e 2026-04-14)
+
+
+Rust is installed now. Great!
+
+To get started you may need to restart your current shell.
+This would reload your PATH environment variable to include
+Cargo's bin directory ($HOME/.cargo/bin).
+
+To configure your current shell, you need to source
+the corresponding env file under $HOME/.cargo.
+
+This is usually done by running one of the following (note the leading DOT):
+. "$HOME/.cargo/env"            # For sh/bash/zsh/ash/dash/pdksh
+source "$HOME/.cargo/env.fish"  # For fish
+source "~/.cargo/env.nu"  # For nushell
+source "$HOME/.cargo/env.tcsh"  # For tcsh
+. "$HOME/.cargo/env.ps1"        # For pwsh
+source "$HOME/.cargo/env.xsh"   # For xonsh
+ayushkumarsingh@Ayushs-MacBook-Air ANTP % source "$HOME/.cargo/env"
+
+ayushkumarsingh@Ayushs-MacBook-Air ANTP % cd edge-daemon/src-tauri
+ayushkumarsingh@Ayushs-MacBook-Air src-tauri % cargo build
+    Updating crates.io index
+     Locking 614 packages to latest compatible versions
+      Adding generic-array v0.14.7 (available: v0.14.9)
+      Adding proc-macro-crate v2.0.0 (available: v2.0.2)
+      Adding sha2 v0.10.9 (available: v0.11.0)
+      Adding sysinfo v0.32.1 (available: v0.38.4)
+      Adding tokio-tungstenite v0.24.0 (available: v0.29.0)
+      Adding wasmtime v27.0.0 (available: v44.0.0)
+  Downloaded addr2line v0.24.2
+  Downloaded unic-ucd-version v0.9.0
+  Downloaded unic-common v0.9.0
+  Downloaded unic-char-range v0.9.0
+  Downloaded convert_case v0.4.0
+  Downloaded objc2-exception-helper v0.1.1
+  Downloaded cranelift-bitset v0.114.0
+  Downloaded core-graphics-types v0.2.0
+  Downloaded uuid v1.23.1
+  Downloaded unicode-xid v0.2.6
+  Downloaded utf-8 v0.7.6
+  Downloaded unic-ucd-ident v0.9.0
+  Downloaded wasmtime-component-util v27.0.0
+  Downloaded wasmtime-asm-macros v27.0.0
+  Downloaded wasmtime-versioned-export-macros v27.0.0
+  Downloaded precomputed-hash v0.1.1
+  Downloaded phf_shared v0.10.0
+  Downloaded phf_macros v0.10.0
+  Downloaded phf_codegen v0.11.3
+  Downloaded phf v0.8.0
+  Downloaded option-ext v0.2.0
+  Downloaded wat v1.247.0
+  Downloaded wasmtime-winch v27.0.0
+  Downloaded fnv v1.0.7
+  Downloaded proc-macro-hack v0.5.20+deprecated
+  Downloaded wasmtime-jit-debug v27.0.0
+  Downloaded phf_codegen v0.8.0
+  Downloaded futf v0.1.5
+  Downloaded phf_shared v0.8.0
+  Downloaded phf v0.10.1
+  Downloaded matches v0.1.10
+  Downloaded futures-task v0.3.32
+  Downloaded futures-core v0.3.32
+  Downloaded rand_chacha v0.2.2
+  Downloaded objc2-io-surface v0.3.2
+  Downloaded fxhash v0.2.1
+  Downloaded ctor v0.2.9
+  Downloaded phf_generator v0.8.0
+  Downloaded os_pipe v1.2.3
+  Downloaded serde_spanned v0.6.9
+  Downloaded phf_generator v0.10.0
+  Downloaded serde_repr v0.1.20
+  Downloaded dyn-clone v1.0.20
+  Downloaded rustc_version v0.4.1
+  Downloaded rustc-hash v2.1.2
+  Downloaded cranelift-native v0.114.0
+  Downloaded sigchld v0.2.4
+  Downloaded leb128 v0.2.6
+  Downloaded ident_case v1.0.1
+  Downloaded futures-io v0.3.32
+  Downloaded cobs v0.3.0
+  Downloaded futures-macro v0.3.32
+  Downloaded cranelift-codegen-shared v0.114.0
+  Downloaded ref-cast v1.0.25
+  Downloaded shared_child v1.1.1
+  Downloaded rand_pcg v0.2.1
+  Downloaded darling_macro v0.23.0
+  Downloaded embed_plist v1.2.2
+  Downloaded new_debug_unreachable v1.0.6
+  Downloaded foreign-types-shared v0.3.1
+  Downloaded dpi v0.1.2
+  Downloaded nodrop v0.1.14
+  Downloaded cargo-platform v0.1.9
+  Downloaded ref-cast-impl v1.0.25
+  Downloaded phf_generator v0.11.3
+  Downloaded mac v0.1.1
+  Downloaded debugid v0.8.0
+  Downloaded embedded-io v0.6.1
+  Downloaded dtoa-short v0.3.5
+  Downloaded dirs-sys v0.5.0
+  Downloaded directories-next v2.0.0
+  Downloaded dirs v6.0.0
+  Downloaded foreign-types-macros v0.2.3
+  Downloaded pathdiff v0.2.3
+  Downloaded foreign-types v0.5.0
+  Downloaded cranelift-control v0.114.0
+  Downloaded futures-sink v0.3.32
+  Downloaded urlpattern v0.3.0
+  Downloaded dunce v1.0.5
+  Downloaded ahash v0.8.12
+  Downloaded cranelift-bforest v0.114.0
+  Downloaded slice-group-by v0.3.1
+  Downloaded toml_datetime v0.6.11
+  Downloaded unic-char-property v0.9.0
+  Downloaded sptr v0.3.2
+  Downloaded string_cache_codegen v0.5.4
+  Downloaded bitflags v1.3.2
+  Downloaded typeid v1.0.3
+  Downloaded foldhash v0.1.5
+  Downloaded cssparser-macros v0.6.1
+  Downloaded toml_write v0.1.2
+  Downloaded wasmtime-jit-icache-coherence v27.0.0
+  Downloaded async-trait v0.1.89
+  Downloaded wasmtime-slab v27.0.0
+  Downloaded embed-resource v3.0.8
+  Downloaded fdeflate v0.3.7
+  Downloaded phf v0.11.3
+  Downloaded match_token v0.1.0
+  Downloaded mach2 v0.4.3
+  Downloaded phf_macros v0.11.3
+  Downloaded rand_core v0.5.1
+  Downloaded phf_shared v0.11.3
+  Downloaded pin-project-lite v0.2.17
+  Downloaded json-patch v3.0.1
+  Downloaded wasmtime-wit-bindgen v27.0.0
+  Downloaded cranelift-entity v0.114.0
+  Downloaded serialize-to-javascript-impl v0.1.2
+  Downloaded security-framework-sys v2.17.0
+  Downloaded embedded-io v0.4.0
+  Downloaded getrandom v0.1.16
+  Downloaded signal-hook-registry v1.4.8
+  Downloaded servo_arc v0.2.0
+  Downloaded dtoa v1.0.11
+  Downloaded data-encoding v2.10.0
+  Downloaded fxprof-processed-profile v0.6.0
+  Downloaded core-foundation v0.10.1
+  Downloaded infer v0.19.0
+  Downloaded native-tls v0.2.18
+  Downloaded cargo_metadata v0.19.2
+  Downloaded serde_derive_internals v0.29.1
+  Downloaded serde-untagged v0.1.9
+  Downloaded schemars_derive v0.8.22
+  Downloaded core-graphics v0.25.0
+  Downloaded arbitrary v1.4.2
+  Downloaded cookie v0.18.1
+  Downloaded serialize-to-javascript v0.1.2
+  Downloaded wasmtime-fiber v27.0.0
+  Downloaded slab v0.4.12
+  Downloaded tokio-macros v2.7.0
+  Downloaded swift-rs v1.0.7
+  Downloaded tokio-native-tls v0.3.1
+  Downloaded target-lexicon v0.12.16
+  Downloaded string_cache v0.8.9
+  Downloaded time-macros v0.2.27
+  Downloaded termcolor v1.4.1
+  Downloaded tokio-tungstenite v0.24.0
+  Downloaded kuchikiki v0.8.8-speedreader
+  Downloaded keyboard-types v0.7.0
+  Downloaded tauri-plugin v2.5.4
+  Downloaded jsonptr v0.6.3
+  Downloaded thiserror-impl v1.0.69
+  Downloaded thiserror v1.0.69
+  Downloaded tauri-winres v0.3.5
+  Downloaded objc2-encode v4.1.0
+  Downloaded markup5ever v0.14.1
+  Downloaded darling v0.23.0
+  Downloaded erased-serde v0.4.10
+  Downloaded pulley-interpreter v27.0.0
+  Downloaded wasmprinter v0.219.2
+  Downloaded paste v1.0.15
+  Downloaded open v5.3.4
+  Downloaded raw-window-handle v0.6.2
+  Downloaded rmp-serde v1.3.1
+  Downloaded rmp v0.8.15
+  Downloaded block2 v0.6.2
+  Downloaded selectors v0.24.0
+  Downloaded tendril v0.4.3
+  Downloaded indexmap v1.9.3
+  Downloaded cargo_toml v0.22.3
+  Downloaded cranelift-frontend v0.114.0
+  Downloaded wasm-encoder v0.247.0
+  Downloaded derive_more v0.99.20
+  Downloaded toml v0.8.23
+  Downloaded dispatch2 v0.3.1
+  Downloaded tauri-macros v2.5.5
+  Downloaded tauri-build v2.5.6
+  Downloaded wasmtime-cache v27.0.0
+  Downloaded tungstenite v0.24.0
+  Downloaded postcard v1.1.3
+  Downloaded signal-hook v0.3.18
+  Downloaded serde_with_macros v3.18.0
+  Downloaded schemars v0.8.22
+  Downloaded cranelift-codegen-meta v0.114.0
+  Downloaded darling_core v0.23.0
+  Downloaded cssparser v0.29.6
+  Downloaded html5ever v0.29.1
+  Downloaded tauri-runtime v2.10.1
+  Downloaded toml_edit v0.22.27
+  Downloaded cfb v0.7.3
+  Downloaded tauri-codegen v2.5.5
+  Downloaded ico v0.5.0
+  Downloaded cranelift-isle v0.114.0
+  Downloaded cpp_demangle v0.4.5
+  Downloaded tray-icon v0.21.3
+  Downloaded plist v1.8.0
+  Downloaded wasm-encoder v0.219.2
+  Downloaded objc2-core-graphics v0.3.2
+  Downloaded muda v0.17.2
+  Downloaded schemars v0.9.0
+  Downloaded base64 v0.21.7
+  Downloaded mio v1.2.0
+  Downloaded crossbeam-channel v0.5.15
+  Downloaded hashbrown v0.12.3
+  Downloaded tauri-runtime-wry v2.10.1
+  Downloaded socket2 v0.6.3
+  Downloaded security-framework v3.7.0
+  Downloaded itertools v0.12.1
+  Downloaded rand v0.8.6
+  Downloaded hashbrown v0.15.5
+  Downloaded unicode-segmentation v1.13.2
+  Downloaded hashbrown v0.14.5
+  Downloaded libm v0.2.16
+  Downloaded futures-util v0.3.32
+  Downloaded schemars v1.2.1
+  Downloaded png v0.17.16
+  Downloaded regalloc2 v0.10.2
+  Downloaded winch-codegen v27.0.0
+  Downloaded rand v0.7.3
+  Downloaded typenum v1.20.0
+  Downloaded objc2 v0.6.4
+  Downloaded tao v0.34.8
+  Downloaded wit-parser v0.219.2
+  Downloaded gimli v0.31.1
+  Downloaded tauri-utils v2.8.3
+  Downloaded tauri-plugin-shell v2.3.5
+  Downloaded objc2-web-kit v0.3.2
+  Downloaded wast v247.0.0
+  Downloaded wasmtime-cranelift v27.0.0
+  Downloaded sysinfo v0.32.1
+  Downloaded serde_with v3.18.0
+  Downloaded wasmtime-component-macro v27.0.0
+  Downloaded winnow v1.0.2
+  Downloaded wry v0.54.4
+  Downloaded wasmtime-environ v27.0.0
+  Downloaded objc2-app-kit v0.3.2
+  Downloaded quick-xml v0.38.4
+  Downloaded wasmparser v0.219.2
+  Downloaded syn v1.0.109
+  Downloaded brotli v8.0.2
+  Downloaded wasmparser v0.247.0
+  Downloaded tauri v2.10.3
+  Downloaded object v0.36.7
+  Downloaded objc2-foundation v0.3.2
+  Downloaded cranelift-codegen v0.114.0
+  Downloaded encoding_rs v0.8.35
+  Downloaded wasmtime v27.0.0
+  Downloaded tokio v1.52.1
+  Downloaded window-vibrancy v0.6.0
+  Downloaded 238 crates (17.4MiB) in 1m 00s (largest was `window-vibrancy` at 1.3MiB)
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.185
+   Compiling serde_core v1.0.228
+   Compiling zerocopy v0.8.48
+   Compiling memchr v2.8.0
+   Compiling serde v1.0.228
+   Compiling itoa v1.0.18
+   Compiling jobserver v0.1.34
+   Compiling find-msvc-tools v0.1.9
+   Compiling version_check v0.9.5
+   Compiling shlex v1.3.0
+   Compiling cc v1.2.60
+   Compiling hashbrown v0.17.0
+   Compiling equivalent v1.0.2
+   Compiling getrandom v0.2.17
+   Compiling writeable v0.6.3
+   Compiling zmij v1.0.21
+   Compiling litemap v0.8.2
+   Compiling rand_core v0.6.4
+   Compiling getrandom v0.4.2
+   Compiling syn v2.0.117
+   Compiling utf8_iter v1.0.4
+   Compiling stable_deref_trait v1.2.1
+   Compiling icu_normalizer_data v2.2.0
+   Compiling icu_properties_data v2.2.0
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_chacha v0.3.1
+   Compiling rand v0.8.6
+   Compiling synstructure v0.13.2
+   Compiling bitflags v2.11.1
+   Compiling siphasher v1.0.2
+   Compiling byteorder v1.5.0
+   Compiling phf_shared v0.11.3
+   Compiling anyhow v1.0.102
+   Compiling smallvec v1.15.1
+   Compiling thiserror v2.0.18
+   Compiling phf_generator v0.11.3
+   Compiling serde_json v1.0.149
+   Compiling siphasher v0.3.11
+   Compiling serde_derive v1.0.228
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling zerofrom v0.1.7
+   Compiling zerovec-derive v0.11.3
+   Compiling displaydoc v0.2.5
+   Compiling thiserror-impl v2.0.18
+   Compiling getrandom v0.1.16
+   Compiling parking_lot_core v0.9.12
+   Compiling thiserror v1.0.69
+   Compiling thiserror-impl v1.0.69
+   Compiling yoke v0.8.2
+   Compiling scopeguard v1.2.0
+   Compiling autocfg v1.5.0
+   Compiling lock_api v0.4.14
+   Compiling semver v1.0.28
+   Compiling aho-corasick v1.1.4
+   Compiling ident_case v1.0.1
+   Compiling bytes v1.11.1
+   Compiling regex-syntax v0.8.10
+   Compiling once_cell v1.21.4
+   Compiling syn v1.0.109
+   Compiling typeid v1.0.3
+   Compiling strsim v0.11.1
+   Compiling winnow v1.0.2
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling darling_core v0.23.0
+   Compiling rand_core v0.5.1
+   Compiling regex-automata v0.4.14
+   Compiling phf_macros v0.11.3
+   Compiling erased-serde v0.4.10
+   Compiling toml_writer v1.1.1+spec-1.1.0
+   Compiling log v0.4.29
+   Compiling regex v1.12.3
+   Compiling darling_macro v0.23.0
+   Compiling rand_chacha v0.2.2
+   Compiling zerovec v0.11.6
+   Compiling zerotrie v0.2.4
+   Compiling rand_pcg v0.2.1
+   Compiling phf_shared v0.8.0
+   Compiling indexmap v2.14.0
+   Compiling proc-macro-hack v0.5.20+deprecated
+   Compiling unic-char-range v0.9.0
+   Compiling fnv v1.0.7
+   Compiling unic-common v0.9.0
+   Compiling unic-ucd-version v0.9.0
+   Compiling unic-char-property v0.9.0
+   Compiling rand v0.7.3
+   Compiling darling v0.23.0
+   Compiling http v1.4.0
+   Compiling phf_shared v0.10.0
+   Compiling utf-8 v0.7.6
+   Compiling alloc-no-stdlib v2.0.4
+   Compiling new_debug_unreachable v1.0.6
+   Compiling alloc-stdlib v0.2.2
+   Compiling phf_generator v0.10.0
+   Compiling phf_generator v0.8.0
+   Compiling unic-ucd-ident v0.9.0
+   Compiling string_cache_codegen v0.5.4
+   Compiling phf_codegen v0.11.3
+   Compiling objc2-exception-helper v0.1.1
+   Compiling ahash v0.8.12
+   Compiling precomputed-hash v0.1.1
+   Compiling bitflags v1.3.2
+   Compiling mac v0.1.1
+   Compiling futf v0.1.5
+   Compiling markup5ever v0.14.1
+   Compiling cssparser v0.29.6
+   Compiling parking_lot v0.12.5
+   Compiling phf_codegen v0.8.0
+   Compiling brotli-decompressor v5.0.0
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling icu_locale_core v2.2.0
+   Compiling icu_collections v2.2.0
+   Compiling fxhash v0.2.1
+   Compiling errno v0.3.14
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling phf_macros v0.10.0
+   Compiling serde_spanned v1.1.1
+   Compiling powerfmt v0.2.0
+   Compiling serde_with_macros v3.18.0
+   Compiling time-core v0.1.8
+   Compiling icu_provider v2.2.0
+   Compiling same-file v1.0.6
+   Compiling percent-encoding v2.3.2
+   Compiling num-conv v0.2.1
+   Compiling dtoa v1.0.11
+   Compiling icu_properties v2.2.0
+   Compiling icu_normalizer v2.2.0
+   Compiling winnow v0.7.15
+   Compiling dunce v1.0.5
+   Compiling dtoa-short v0.3.5
+   Compiling form_urlencoded v1.2.2
+   Compiling walkdir v2.5.0
+   Compiling deranged v0.5.8
+   Compiling brotli v8.0.2
+   Compiling uuid v1.23.1
+   Compiling selectors v0.24.0
+   Compiling idna_adapter v1.2.1
+   Compiling idna v1.1.0
+   Compiling toml v0.9.12+spec-1.1.0
+   Compiling string_cache v0.8.9
+   Compiling tendril v0.4.3
+   Compiling phf v0.11.3
+   Compiling indexmap v1.9.3
+   Compiling ctor v0.2.9
+   Compiling cssparser-macros v0.6.1
+   Compiling generic-array v0.14.7
+   Compiling phf v0.10.1
+   Compiling convert_case v0.4.0
+   Compiling matches v0.1.10
+   Compiling core-foundation-sys v0.8.7
+   Compiling base64 v0.21.7
+   Compiling camino v1.2.2
+   Compiling objc2 v0.6.4
+   Compiling nodrop v0.1.14
+   Compiling glob v0.3.3
+   Compiling servo_arc v0.2.0
+   Compiling derive_more v0.99.20
+   Compiling url v2.5.8
+   Compiling phf v0.8.0
+   Compiling swift-rs v1.0.7
+   Compiling match_token v0.1.0
+   Compiling serde_derive_internals v0.29.1
+   Compiling typenum v1.20.0
+   Compiling hashbrown v0.12.3
+   Compiling objc2-encode v4.1.0
+   Compiling schemars v0.8.22
+   Compiling crc32fast v1.5.0
+   Compiling schemars_derive v0.8.22
+   Compiling html5ever v0.29.1
+   Compiling cfb v0.7.3
+   Compiling jsonptr v0.6.3
+   Compiling cargo-platform v0.1.9
+   Compiling crossbeam-utils v0.8.21
+   Compiling option-ext v0.2.0
+   Compiling dyn-clone v1.0.20
+   Compiling json-patch v3.0.1
+   Compiling cargo_metadata v0.19.2
+   Compiling serde-untagged v0.1.9
+   Compiling infer v0.19.0
+   Compiling urlpattern v0.3.0
+   Compiling serde_with v3.18.0
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling heck v0.5.0
+   Compiling digest v0.10.7
+   Compiling objc2-core-foundation v0.3.2
+   Compiling block2 v0.6.2
+   Compiling core-foundation v0.10.1
+   Compiling objc2-foundation v0.3.2
+   Compiling rustc_version v0.4.1
+   Compiling quick-xml v0.38.4
+   Compiling base64 v0.22.1
+   Compiling simd-adler32 v0.3.9
+   Compiling embed-resource v3.0.8
+   Compiling hashbrown v0.14.5
+   Compiling kuchikiki v0.8.8-speedreader
+   Compiling dirs-sys v0.5.0
+   Compiling time v0.3.47
+   Compiling adler2 v2.0.1
+   Compiling cranelift-isle v0.114.0
+   Compiling miniz_oxide v0.8.9
+   Compiling dirs v6.0.0
+   Compiling tauri-winres v0.3.5
+   Compiling plist v1.8.0
+   Compiling cargo_toml v0.22.3
+   Compiling time-macros v0.2.27
+   Compiling signal-hook-registry v1.4.8
+   Compiling objc2-app-kit v0.3.2
+   Compiling cranelift-bitset v0.114.0
+   Compiling wasmtime-versioned-export-macros v27.0.0
+   Compiling cranelift-codegen-shared v0.114.0
+   Compiling target-lexicon v0.12.16
+   Compiling pkg-config v0.3.33
+   Compiling tauri-utils v2.8.3
+   Compiling cranelift-codegen-meta v0.114.0
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+   Compiling cranelift-entity v0.114.0
+   Compiling flate2 v1.1.9
+   Compiling fdeflate v0.3.7
+   Compiling gimli v0.31.1
+   Compiling dpi v0.1.2
+   Compiling cookie v0.18.1
+   Compiling bumpalo v3.20.2
+   Compiling rustix v1.1.4
+   Compiling raw-window-handle v0.6.2
+   Compiling png v0.17.16
+   Compiling cranelift-codegen v0.114.0
+   Compiling foreign-types-macros v0.2.3
+   Compiling cpufeatures v0.2.17
+   Compiling foreign-types-shared v0.3.1
+   Compiling object v0.36.7
+   Compiling slice-group-by v0.3.1
+   Compiling arbitrary v1.4.2
+   Compiling rustc-hash v2.1.2
+   Compiling pin-project-lite v0.2.17
+   Compiling foldhash v0.1.5
+   Compiling regalloc2 v0.10.2
+   Compiling hashbrown v0.15.5
+   Compiling foreign-types v0.5.0
+   Compiling cranelift-control v0.114.0
+   Compiling objc2-web-kit v0.3.2
+   Compiling cranelift-bforest v0.114.0
+   Compiling crossbeam-channel v0.5.15
+   Compiling crossbeam-epoch v0.9.18
+   Compiling core-graphics-types v0.2.0
+   Compiling security-framework-sys v2.17.0
+   Compiling cobs v0.3.0
+   Compiling num-traits v0.2.19
+   Compiling tokio-macros v2.7.0
+   Compiling socket2 v0.6.3
+   Compiling mio v1.2.0
+   Compiling native-tls v0.2.18
+   Compiling cpp_demangle v0.4.5
+   Compiling tauri-runtime v2.10.1
+   Compiling fastrand v2.4.1
+   Compiling either v1.15.0
+   Compiling zstd-safe v7.2.4
+   Compiling signal-hook v0.3.18
+   Compiling rayon-core v1.13.0
+   Compiling rustix v0.38.44
+   Compiling wry v0.54.4
+   Compiling tauri-build v2.5.6
+   Compiling tauri-plugin v2.5.4
+   Compiling wasmparser v0.219.2
+   Compiling tempfile v3.27.0
+   Compiling sha2 v0.10.9
+   Compiling tokio v1.52.1
+   Compiling postcard v1.1.3
+   Compiling security-framework v3.7.0
+   Compiling crossbeam-deque v0.8.6
+   Compiling core-graphics v0.25.0
+   Compiling ico v0.5.0
+   Compiling tauri v2.10.3
+   Compiling dispatch2 v0.3.1
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling id-arena v2.3.0
+   Compiling tauri-runtime-wry v2.10.1
+   Compiling wasmtime-component-util v27.0.0
+   Compiling unicode-xid v0.2.6
+   Compiling httparse v1.10.1
+   Compiling getrandom v0.3.4
+   Compiling unicode-segmentation v1.13.2
+   Compiling leb128fmt v0.1.0
+   Compiling toml_write v0.1.2
+   Compiling leb128 v0.2.6
+   Compiling termcolor v1.4.1
+   Compiling wasm-encoder v0.219.2
+   Compiling keyboard-types v0.7.0
+   Compiling toml_edit v0.22.27
+   Compiling wasm-encoder v0.247.0
+   Compiling wit-parser v0.219.2
+   Compiling tao v0.34.8
+   Compiling tauri-plugin-shell v2.3.5
+   Compiling tauri-codegen v2.5.5
+   Compiling wasmprinter v0.219.2
+   Compiling wasmtime-fiber v27.0.0
+   Compiling serialize-to-javascript-impl v0.1.2
+   Compiling os_pipe v1.2.3
+   Compiling dirs-sys-next v0.1.2
+   Compiling libm v0.2.16
+   Compiling wasmtime-cache v27.0.0
+   Compiling rustc-demangle v0.1.27
+   Compiling paste v1.0.15
+   Compiling utf8parse v0.2.2
+   Compiling unicode-width v0.2.2
+   Compiling wasmtime-component-macro v27.0.0
+   Compiling wast v247.0.0
+   Compiling wasmtime-environ v27.0.0
+   Compiling anstyle-parse v1.0.0
+   Compiling serialize-to-javascript v0.1.2
+   Compiling directories-next v2.0.0
+   Compiling sigchld v0.2.4
+   Compiling cranelift-native v0.114.0
+   Compiling cranelift-frontend v0.114.0
+   Compiling rayon v1.12.0
+   Compiling tauri-macros v2.5.5
+   Compiling wasmtime-wit-bindgen v27.0.0
+   Compiling toml v0.8.23
+   Compiling zstd v0.13.3
+   Compiling muda v0.17.2
+   Compiling itertools v0.12.1
+   Compiling sha1 v0.10.6
+   Compiling window-vibrancy v0.6.0
+   Compiling wasmtime v27.0.0
+   Compiling debugid v0.8.0
+   Compiling futures-macro v0.3.32
+   Compiling serde_repr v0.1.20
+   Compiling encoding_rs v0.8.35
+   Compiling wasmtime-asm-macros v27.0.0
+   Compiling anstyle v1.0.14
+   Compiling futures-sink v0.3.32
+   Compiling futures-core v0.3.32
+   Compiling colorchoice v1.0.5
+   Compiling embed_plist v1.2.2
+   Compiling futures-task v0.3.32
+   Compiling mime v0.3.17
+   Compiling anstyle-query v1.1.5
+   Compiling slab v0.4.12
+   Compiling data-encoding v2.10.0
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling pathdiff v0.2.3
+   Compiling futures-util v0.3.32
+   Compiling open v5.3.4
+   Compiling anstream v1.0.0
+   Compiling tungstenite v0.24.0
+   Compiling wasmtime-cranelift v27.0.0
+   Compiling fxprof-processed-profile v0.6.0
+   Compiling wat v1.247.0
+   Compiling shared_child v1.1.1
+   Compiling rmp v0.8.15
+   Compiling tokio-native-tls v0.3.1
+   Compiling wasmtime-jit-debug v27.0.0
+   Compiling antp-edge-daemon v0.1.0 (/Users/ayushkumarsingh/Downloads/ANTP/edge-daemon/src-tauri)
+   Compiling addr2line v0.24.2
+   Compiling iana-time-zone v0.1.65
+   Compiling env_filter v1.0.1
+   Compiling wasmtime-jit-icache-coherence v27.0.0
+   Compiling async-trait v0.1.89
+   Compiling mach2 v0.4.3
+   Compiling sptr v0.3.2
+   Compiling wasmtime-slab v27.0.0
+   Compiling jiff v0.2.23
+   Compiling chrono v0.4.44
+   Compiling tokio-tungstenite v0.24.0
+   Compiling rmp-serde v1.3.1
+   Compiling sysinfo v0.32.1
+   Compiling hex v0.4.3
+   Compiling env_logger v0.11.10
+error: proc macro panicked
+   --> src/lib.rs:152:14
+    |
+152 |         .run(tauri::generate_context!())
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: message: failed to open icon /Users/ayushkumarsingh/Downloads/ANTP/edge-daemon/src-tauri/icons/32x32.png: No such file or directory (os error 2)
+
+warning: unused imports: `error` and `warn`
+ --> src/executor/runtime.rs:1:11
+  |
+1 | use log::{error, info, warn};
+  |           ^^^^^        ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `NODE_REGISTER` should have an upper camel case name
+  --> src/ws/client.rs:29:5
+   |
+29 |     NODE_REGISTER {
+   |     ^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `NodeRegister`
+   |
+   = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: variant `TASK_STEAL` should have an upper camel case name
+  --> src/ws/client.rs:36:5
+   |
+36 |     TASK_STEAL {
+   |     ^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskSteal`
+
+warning: variant `TASK_RESULT` should have an upper camel case name
+  --> src/ws/client.rs:40:5
+   |
+40 |     TASK_RESULT {
+   |     ^^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskResult`
+
+warning: variant `TASK_EVICTION` should have an upper camel case name
+  --> src/ws/client.rs:56:5
+   |
+56 |     TASK_EVICTION {
+   |     ^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskEviction`
+
+warning: variant `REGISTER_ACK` should have an upper camel case name
+  --> src/ws/client.rs:81:5
+   |
+81 |     REGISTER_ACK {
+   |     ^^^^^^^^^^^^ help: convert the identifier to upper camel case: `RegisterAck`
+
+warning: variant `TASK_ASSIGNMENT` should have an upper camel case name
+  --> src/ws/client.rs:88:5
+   |
+88 |     TASK_ASSIGNMENT {
+   |     ^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskAssignment`
+
+warning: variant `NO_TASK_AVAILABLE` should have an upper camel case name
+   --> src/ws/client.rs:104:5
+    |
+104 |     NO_TASK_AVAILABLE {
+    |     ^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `NoTaskAvailable`
+
+warning: variant `EVICTION_ACK` should have an upper camel case name
+   --> src/ws/client.rs:108:5
+    |
+108 |     EVICTION_ACK {
+    |     ^^^^^^^^^^^^ help: convert the identifier to upper camel case: `EvictionAck`
+
+warning: variant `HEARTBEAT_ACK` should have an upper camel case name
+   --> src/ws/client.rs:114:5
+    |
+114 |     HEARTBEAT_ACK {
+    |     ^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `HeartbeatAck`
+
+error: future cannot be sent between threads safely
+   --> src/ws/client.rs:240:24
+    |
+240 |       let steal_handle = tokio::spawn(async move {
+    |  ________________________^
+241 | |         // Wait for registration ACK
+242 | |         sleep(Duration::from_millis(2000)).await;
+...   |
+262 | |     });
+    | |______^ future created by async block is not `Send`
+    |
+    = help: within `{async block@src/ws/client.rs:240:37: 240:47}`, the trait `std::marker::Send` is not implemented for `*mut ()`
+note: future is not `Send` as this value is used across an await
+   --> src/ws/client.rs:260:66
+    |
+245 |             let s = steal_status.read();
+    |                 - has type `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, DaemonStatus>` which is not `Send`
+...
+260 |             sleep(Duration::from_millis(TASK_STEAL_INTERVAL_MS)).await;
+    |                                                                  ^^^^^ await occurs here, with `s` maybe used later
+note: required by a bound in `tokio::spawn`
+   --> /Users/ayushkumarsingh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.52.1/src/task/spawn.rs:176:21
+    |
+174 |     pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
+    |            ----- required by a bound in this function
+175 |     where
+176 |         F: Future + Send + 'static,
+    |                     ^^^^ required by this bound in `spawn`
+
+warning: unused import: `Manager`
+  --> src/lib.rs:11:13
+   |
+11 | use tauri::{Manager, State};
+   |             ^^^^^^^
+
+warning: unused variable: `timeout_ms`
+  --> src/executor/runtime.rs:28:5
+   |
+28 |     timeout_ms: u32,
+   |     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timeout_ms`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `created_at`
+   --> src/ws/client.rs:359:13
+    |
+359 |             created_at,
+    |             ^^^^^^^^^^ help: try ignoring the field: `created_at: _`
+
+warning: unused variable: `retry_after_ms`
+   --> src/ws/client.rs:434:40
+    |
+434 |         WsMessage::NO_TASK_AVAILABLE { retry_after_ms } => {
+    |                                        ^^^^^^^^^^^^^^ help: try ignoring the field: `retry_after_ms: _`
+
+warning: unused variable: `server_time_ms`
+   --> src/ws/client.rs:449:36
+    |
+449 |         WsMessage::HEARTBEAT_ACK { server_time_ms } => {
+    |                                    ^^^^^^^^^^^^^^ help: try ignoring the field: `server_time_ms: _`
+
+warning: `antp-edge-daemon` (lib) generated 15 warnings
+error: could not compile `antp-edge-daemon` (lib) due to 2 previous errors; 15 warnings emitted
+ayushkumarsingh@Ayushs-MacBook-Air src-tauri % cargo test
+   Compiling antp-edge-daemon v0.1.0 (/Users/ayushkumarsingh/Downloads/ANTP/edge-daemon/src-tauri)
+error: proc macro panicked
+   --> src/lib.rs:152:14
+    |
+152 |         .run(tauri::generate_context!())
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: message: failed to open icon /Users/ayushkumarsingh/Downloads/ANTP/edge-daemon/src-tauri/icons/32x32.png: No such file or directory (os error 2)
+
+warning: unused imports: `error` and `warn`
+ --> src/executor/runtime.rs:1:11
+  |
+1 | use log::{error, info, warn};
+  |           ^^^^^        ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `NODE_REGISTER` should have an upper camel case name
+  --> src/ws/client.rs:29:5
+   |
+29 |     NODE_REGISTER {
+   |     ^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `NodeRegister`
+   |
+   = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: variant `TASK_STEAL` should have an upper camel case name
+  --> src/ws/client.rs:36:5
+   |
+36 |     TASK_STEAL {
+   |     ^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskSteal`
+
+warning: variant `TASK_RESULT` should have an upper camel case name
+  --> src/ws/client.rs:40:5
+   |
+40 |     TASK_RESULT {
+   |     ^^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskResult`
+
+warning: variant `TASK_EVICTION` should have an upper camel case name
+  --> src/ws/client.rs:56:5
+   |
+56 |     TASK_EVICTION {
+   |     ^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskEviction`
+
+warning: variant `REGISTER_ACK` should have an upper camel case name
+  --> src/ws/client.rs:81:5
+   |
+81 |     REGISTER_ACK {
+   |     ^^^^^^^^^^^^ help: convert the identifier to upper camel case: `RegisterAck`
+
+warning: variant `TASK_ASSIGNMENT` should have an upper camel case name
+  --> src/ws/client.rs:88:5
+   |
+88 |     TASK_ASSIGNMENT {
+   |     ^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `TaskAssignment`
+
+warning: variant `NO_TASK_AVAILABLE` should have an upper camel case name
+   --> src/ws/client.rs:104:5
+    |
+104 |     NO_TASK_AVAILABLE {
+    |     ^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `NoTaskAvailable`
+
+warning: variant `EVICTION_ACK` should have an upper camel case name
+   --> src/ws/client.rs:108:5
+    |
+108 |     EVICTION_ACK {
+    |     ^^^^^^^^^^^^ help: convert the identifier to upper camel case: `EvictionAck`
+
+warning: variant `HEARTBEAT_ACK` should have an upper camel case name
+   --> src/ws/client.rs:114:5
+    |
+114 |     HEARTBEAT_ACK {
+    |     ^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `HeartbeatAck`
+
+error: future cannot be sent between threads safely
+   --> src/ws/client.rs:240:24
+    |
+240 |       let steal_handle = tokio::spawn(async move {
+    |  ________________________^
+241 | |         // Wait for registration ACK
+242 | |         sleep(Duration::from_millis(2000)).await;
+...   |
+262 | |     });
+    | |______^ future created by async block is not `Send`
+    |
+    = help: within `{async block@src/ws/client.rs:240:37: 240:47}`, the trait `std::marker::Send` is not implemented for `*mut ()`
+note: future is not `Send` as this value is used across an await
+   --> src/ws/client.rs:260:66
+    |
+245 |             let s = steal_status.read();
+    |                 - has type `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, DaemonStatus>` which is not `Send`
+...
+260 |             sleep(Duration::from_millis(TASK_STEAL_INTERVAL_MS)).await;
+    |                                                                  ^^^^^ await occurs here, with `s` maybe used later
+note: required by a bound in `tokio::spawn`
+   --> /Users/ayushkumarsingh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.52.1/src/task/spawn.rs:176:21
+    |
+174 |     pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
+    |            ----- required by a bound in this function
+175 |     where
+176 |         F: Future + Send + 'static,
+    |                     ^^^^ required by this bound in `spawn`
+
+warning: unused import: `Manager`
+  --> src/lib.rs:11:13
+   |
+11 | use tauri::{Manager, State};
+   |             ^^^^^^^
+
+warning: unused variable: `timeout_ms`
+  --> src/executor/runtime.rs:28:5
+   |
+28 |     timeout_ms: u32,
+   |     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timeout_ms`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `created_at`
+   --> src/ws/client.rs:359:13
+    |
+359 |             created_at,
+    |             ^^^^^^^^^^ help: try ignoring the field: `created_at: _`
+
+warning: unused variable: `retry_after_ms`
+   --> src/ws/client.rs:434:40
+    |
+434 |         WsMessage::NO_TASK_AVAILABLE { retry_after_ms } => {
+    |                                        ^^^^^^^^^^^^^^ help: try ignoring the field: `retry_after_ms: _`
+
+warning: unused variable: `server_time_ms`
+   --> src/ws/client.rs:449:36
+    |
+449 |         WsMessage::HEARTBEAT_ACK { server_time_ms } => {
+    |                                    ^^^^^^^^^^^^^^ help: try ignoring the field: `server_time_ms: _`
+
+warning: `antp-edge-daemon` (lib) generated 15 warnings
+error: could not compile `antp-edge-daemon` (lib) due to 2 previous errors; 15 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `antp-edge-daemon` (lib test) generated 15 warnings (15 duplicates)
+error: could not compile `antp-edge-daemon` (lib test) due to 2 previous errors; 15 warnings emitted
+ayushkumarsingh@Ayushs-MacBook-Air src-tauri % curl -X POST http://localhost:8080/api/task \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tier": "TIER_1",
+    "wasmBytes": "",
+    "input": "aGVsbG8gd29ybGQ=",
+    "timeoutMs": 2000
+  }'
+{"taskId":"b584b5af-98c1-4428-8e20-7a8cd882c89e","familyId":"6f8b893e-1f66-4743-b10f-7e36af7251b0","tier":"TIER_1","cloneIds":["1a4e8761-4e67-440c-926d-d07ed01debc8","33ee542a-b173-4370-b4ea-74a7e0afff28","82589b10-a78b-4170-9e64-390b682978b7"],"slaDeadlineAt":"2026-04-22T17:42:42.096Z","status":"CLONED"}%                                                                             
+ayushkumarsingh@Ayushs-MacBook-Air src-tauri % 
+}
+
+bash 2 {
+    ayushkumarsingh@Ayushs-MacBook-Air ANTP % npm run orch:dev
+
+> antp@0.1.0 orch:dev
+> cd orchestrator && npx tsx src/index.ts
+
+
+╔══════════════════════════════════════════════════════╗
+║          ANTP Orchestrator v0.1.0                    ║
+║     Decentralized Edge-Compute Orchestration         ║
+╠══════════════════════════════════════════════════════╣
+║  WebSocket: ws://0.0.0.0:8080/ws
+║  REST API:  http://0.0.0.0:8080/api
+║  SLA:       2000ms timeout
+║  Cloud:     http://localhost:3001/shadow
+║  Tiers:     T1=$0.001 T2=$0.02 T3=$0.5
+╚══════════════════════════════════════════════════════╝
+  
+[REST] API endpoints registered
+✅ Orchestrator listening on 0.0.0.0:8080
+[SLA] Monitor started (interval=100ms, timeout=2000ms)
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Stats] Tasks: total=0 queued=0 inProgress=0 completed=0 failed=0 cloud=0 | Nodes: 0 active
+[Clone] Created 3 clones for task b584b5af... → TIER_1
+[REST] DB error creating task: NeonDbError: relation "tasks" does not exist
+    at execute (file:///Users/ayushkumarsingh/Downloads/ANTP/database/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async NeonHttpPreparedQuery.execute (/Users/ayushkumarsingh/Downloads/ANTP/database/node_modules/src/neon-http/session.ts:68:18)
+    at async Module.createTask (/Users/ayushkumarsingh/Downloads/ANTP/database/queries.ts:145:18)
+    at async <anonymous> (/Users/ayushkumarsingh/Downloads/ANTP/orchestrator/src/api/rest.ts:110:26) {
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '13',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable',
+  sourceError: undefined
+}
+Warning: uWS.HttpResponse writes must be made from within a corked callback. See documentation for uWS.HttpResponse.cork and consult the user manual.
+Warning: uWS.HttpResponse writes must be made from within a corked callback. See documentation for uWS.HttpResponse.cork and consult the user manual.
+Warning: uWS.HttpResponse writes must be made from within a corked callback. See documentation for uWS.HttpResponse.cork and consult the user manual.
+Warning: uWS.HttpResponse writes must be made from within a corked callback. See documentation for uWS.HttpResponse.cork and consult the user manual.
+Warning: uWS.HttpResponse writes must be made from within a corked callback. See documentation for uWS.HttpResponse.cork and consult the user manual.
+Warning: uWS.HttpResponse writes must be made from within a corked callback. See documentation for uWS.HttpResponse.cork and consult the user manual.
+[SLA] ⚠️  Task b584b5af... breached SLA (deadline was 2026-04-22T17:42:42.096Z, elapsed=2083ms)
+[CloudFallback] Forwarding task b584b5af... to http://localhost:3001/shadow (reason: SLA_TIMEOUT)
+[CloudFallback] ✅ Cloud response for b584b5af... in 102ms (hash=7a6e7cf911d9...)
+[SLA] DB error updating cloud fallback task: NeonDbError: relation "tasks" does not exist
+    at execute (file:///Users/ayushkumarsingh/Downloads/ANTP/database/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async Module.updateTaskStatus (/Users/ayushkumarsingh/Downloads/ANTP/database/queries.ts:171:3)
+    at async checkSlaBreaches (/Users/ayushkumarsingh/Downloads/ANTP/orchestrator/src/sla/monitor.ts:106:9)
+    at async Timeout._onTimeout (/Users/ayushkumarsingh/Downloads/ANTP/orchestrator/src/sla/monitor.ts:51:7) {
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '8',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable',
+  sourceError: undefined
+}
+[SLA] Task b584b5af... resolved via cloud fallback (status=OK)
+[Stats] Tasks: total=1 queued=0 inProgress=0 completed=0 failed=0 cloud=1 | Nodes: 0 active
+[Stats] Tasks: total=1 queued=0 inProgress=0 completed=0 failed=0 cloud=1 | Nodes: 0 active
+[Stats] Tasks: total=1 queued=0 inProgress=0 completed=0 failed=0 cloud=1 | Nodes: 0 active
+
+}
+
+bash 3 {
+    ayushkumarsingh@Ayushs-MacBook-Air ANTP % npm run mock:cloud
+
+> antp@0.1.0 mock:cloud
+> cd mock-cloud && npx tsx server.ts
+
+node:events:497
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3001
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (/Users/ayushkumarsingh/Downloads/ANTP/mock-cloud/node_modules/express/lib/application.js:635:24)
+    at <anonymous> (/Users/ayushkumarsingh/Downloads/ANTP/mock-cloud/server.ts:100:5)
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:665:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+
+Node.js v22.22.2
+ayushkumarsingh@Ayushs-MacBook-Air ANTP % 
+}

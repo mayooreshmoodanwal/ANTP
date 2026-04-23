@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANTP Edge Daemon</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-pulse"></div>
+        <h1>ANTP <span class="header-sub">Edge Daemon</span></h1>
+      </div>
+      <div class="header-right">
+        <span id="connection-badge" class="badge badge--offline">OFFLINE</span>
+      </div>
+    </header>
+
+    <!-- Node Identity -->
+    <section class="card card--identity">
+      <div class="card-label">Node ID</div>
+      <div id="node-id" class="mono truncate">Loading...</div>
+      <div class="identity-meta">
+        <span id="tier-badge" class="badge badge--tier">—</span>
+        <span id="status-text" class="status-text">Initializing</span>
+      </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="tasks-completed">0</div>
+        <div class="stat-label">Tasks Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="tasks-progress">0</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card stat-card--earnings">
+        <div class="stat-value" id="total-earnings">$0.000</div>
+        <div class="stat-label">Total Earned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="reputation">100.0</div>
+        <div class="stat-label">Reputation</div>
+      </div>
+    </div>
+
+    <!-- Hardware -->
+    <section class="card">
+      <h2 class="card-title">Hardware Profile</h2>
+      <div class="hw-grid">
+        <div class="hw-item">
+          <div class="hw-icon">⚡</div>
+          <div class="hw-info">
+            <div class="hw-label">CPU</div>
+            <div class="hw-value" id="hw-cpu">—</div>
+          </div>
+        </div>
+        <div class="hw-item">
+          <div class="hw-icon">🎮</div>
+          <div class="hw-info">
+            <div class="hw-label">GPU</div>
+            <div class="hw-value" id="hw-gpu">—</div>
+          </div>
+        </div>
+        <div class="hw-item">
+          <div class="hw-icon">💾</div>
+          <div class="hw-info">
+            <div class="hw-label">RAM</div>
+            <div class="hw-value" id="hw-ram">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RAM Monitor -->
+    <section class="card">
+      <h2 class="card-title">RAM Monitor</h2>
+      <div class="ram-bar-container">
+        <div class="ram-bar" id="ram-bar" style="width: 0%"></div>
+      </div>
+      <div class="ram-meta">
+        <span id="ram-used">0 MB</span>
+        <span id="ram-pressure" class="badge badge--low">LOW</span>
+        <span id="ram-available">0 MB available</span>
+      </div>
+    </section>
+
+    <!-- Uptime -->
+    <div class="footer">
+      <span>Uptime: <span id="uptime" class="mono">0s</span></span>
+      <span class="footer-version">v0.1.0</span>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
