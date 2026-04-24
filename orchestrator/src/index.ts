@@ -1,6 +1,8 @@
 import { config } from "./config.js";
 import { createWsServer, startHeartbeatMonitor } from "./ws/server.js";
 import { registerRestApi } from "./api/rest.js";
+import { registerAuthApi } from "./api/auth.js";
+import { initializeKeys } from "./api/middleware.js";
 import { startSlaMonitor, onTaskResult } from "./sla/monitor.js";
 import { taskStore } from "./state/task-store.js";
 
@@ -8,13 +10,17 @@ import { taskStore } from "./state/task-store.js";
  * ANTP Orchestrator — Main Entry Point
  *
  * Boots:
- * 1. uWebSockets.js server (WebSocket + HTTP)
- * 2. SLA monitoring loop (100ms poll)
- * 3. Heartbeat monitor (detects dead nodes)
- * 4. Periodic task store purge (memory management)
+ * 1. ECDSA key initialization (JWT signing)
+ * 2. uWebSockets.js server (WebSocket + HTTP)
+ * 3. Auth + REST API endpoints
+ * 4. SLA monitoring loop (100ms poll)
+ * 5. Heartbeat monitor (detects dead nodes)
+ * 6. Periodic task store purge (memory management)
  */
 
 async function main() {
+  // Initialize ECDSA keys for JWT signing
+  await initializeKeys();
   console.log(`
 ╔══════════════════════════════════════════════════════╗
 ║          ANTP Orchestrator v0.1.0                    ║
@@ -33,6 +39,9 @@ async function main() {
 
   // Register REST API endpoints
   registerRestApi(app);
+
+  // Register authentication endpoints
+  registerAuthApi(app);
 
   // Start listening
   app.listen(config.host, config.port, (listenSocket) => {

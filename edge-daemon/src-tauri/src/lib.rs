@@ -74,6 +74,58 @@ fn get_ram_status() -> monitor::RamStatus {
     monitor::get_ram_status()
 }
 
+/// Read a key from .env.local, searching multiple possible locations.
+/// When bundled as a Tauri app, the binary runs from /Applications or similar,
+/// so we search: next to the executable, the user's home dir, and the dev path.
+fn read_env_key(key: &str) -> Option<String> {
+    let mut search_paths: Vec<std::path::PathBuf> = Vec::new();
+
+    // 1. Next to the running executable (production: user puts .env.local beside the app)
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            search_paths.push(dir.join(".env.local"));
+        }
+    }
+
+    // 2. Current working directory (dev mode: cargo run from src-tauri)
+    if let Ok(cwd) = std::env::current_dir() {
+        search_paths.push(cwd.join(".env.local"));
+        // Also check two levels up (legacy dev path: src-tauri -> edge-daemon -> ANTP)
+        search_paths.push(cwd.join("../../.env.local"));
+    }
+
+    // 3. User home directory (fallback: ~/.antp/.env.local)
+    if let Some(home) = dirs_next_home() {
+        search_paths.push(home.join(".antp").join(".env.local"));
+    }
+
+    for path in &search_paths {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            let prefix = format!("{}=", key);
+            for line in content.lines() {
+                let trimmed = line.trim();
+                if trimmed.starts_with(&prefix) {
+                    let value = trimmed[prefix.len()..].trim().to_string();
+                    if !value.is_empty() {
+                        info!("[Config] Found {} in {}", key, path.display());
+                        return Some(value);
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+/// Cross-platform home directory lookup without adding a heavy dependency.
+fn dirs_next_home() -> Option<std::path::PathBuf> {
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .ok()
+        .map(std::path::PathBuf::from)
+}
+
 /// Main entry point — initializes all daemon subsystems.
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
@@ -120,9 +172,7 @@ pub fn run() {
             get_hardware_profile,
             get_ram_status,
         ])
-        .setup(move |app| {
-            let handle = app.handle().clone();
-
+        .setup(move |_app| {
             // Spawn background tasks on the Tokio runtime
             tauri::async_runtime::spawn(async move {
                 // Start WebSocket connection to orchestrator
@@ -131,8 +181,16 @@ pub fn run() {
                 let ws_node_id = node_id_clone.clone();
 
                 tokio::spawn(async move {
+                    // Resolve WS URL: env var -> .env.local -> default localhost
+                    let ws_url = std::env::var("ORCHESTRATOR_WS_URL")
+                        .ok()
+                        .or_else(|| read_env_key("ORCHESTRATOR_WS_URL"))
+                        .unwrap_or_else(|| "ws://localhost:8080/ws".to_string());
+
+                    info!("[Config] Orchestrator URL: {}", ws_url);
+
                     ws::client::connect_and_run(
-                        "ws://localhost:8080/ws",
+                        &ws_url,
                         ws_node_id,
                         ws_profile,
                         ws_status,

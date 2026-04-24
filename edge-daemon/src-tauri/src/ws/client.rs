@@ -11,8 +11,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
-/// Maximum reconnection attempts before giving up.
-const MAX_RECONNECT_ATTEMPTS: u32 = u32::MAX; // Never give up
+/// Reconnection timing constants.
+// const MAX_RECONNECT_ATTEMPTS: u32 = u32::MAX; // Infinite — never give up
 const INITIAL_BACKOFF_MS: u64 = 1000;
 const MAX_BACKOFF_MS: u64 = 30000;
 const HEARTBEAT_INTERVAL_MS: u64 = 15000;
@@ -47,6 +47,7 @@ enum WsMessage {
         family_id: String,
         #[serde(rename = "nodeId")]
         node_id: String,
+        #[serde(with = "serde_bytes")]
         output: Vec<u8>,
         #[serde(rename = "resultHash")]
         result_hash: String,
@@ -94,8 +95,9 @@ enum WsMessage {
         #[serde(rename = "familyId")]
         family_id: String,
         tier: String,
-        #[serde(rename = "wasmBytes")]
+        #[serde(rename = "wasmBytes", with = "serde_bytes")]
         wasm_bytes: Vec<u8>,
+        #[serde(with = "serde_bytes")]
         input: Vec<u8>,
         #[serde(rename = "timeoutMs")]
         timeout_ms: u32,
@@ -191,16 +193,11 @@ async fn run_session(
     let (mut write, mut read) = ws_stream.split();
 
     // Send registration message
-    // Read .env.local manually for dev convenience
-    let mut auth_token = std::env::var("NODE_AUTH_SECRET").unwrap_or_else(|_| "dev-node-secret-change-me".to_string());
-    if let Ok(env_local) = std::fs::read_to_string("../../.env.local") {
-        for line in env_local.lines() {
-            if line.starts_with("NODE_AUTH_SECRET=") {
-                auth_token = line.replace("NODE_AUTH_SECRET=", "").trim().to_string();
-                break;
-            }
-        }
-    }
+    // Resolve auth token: env var -> .env.local (multiple paths) -> default
+    let auth_token = std::env::var("NODE_AUTH_SECRET")
+        .ok()
+        .or_else(|| crate::read_env_key("NODE_AUTH_SECRET"))
+        .unwrap_or_else(|| "dev-node-secret-change-me".to_string());
 
     let register_msg = WsMessage::NODE_REGISTER {
         node_id: node_id.to_string(),

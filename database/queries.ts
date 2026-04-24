@@ -1,4 +1,4 @@
-import { eq, and, sql, inArray, lt, isNull, desc, count } from "drizzle-orm";
+import { eq, and, sql, inArray, lt, isNull, desc, count, gt } from "drizzle-orm";
 import { db, schema } from "./db.js";
 import {
   nodes,
@@ -8,6 +8,9 @@ import {
   payouts,
   evictionLog,
   ragDocuments,
+  users,
+  apiKeys,
+  pairingCodes,
 } from "./schema.js";
 import type {
   NewNode,
@@ -19,6 +22,12 @@ import type {
   Node,
   Task,
   TaskClone,
+  User,
+  NewUser,
+  ApiKey,
+  NewApiKey,
+  PairingCode,
+  NewPairingCode,
 } from "./schema.js";
 
 // ──────────────────────────────────────────────
@@ -545,4 +554,270 @@ export async function getSystemStats() {
     .from(tasks);
 
   return { nodes: nodeStats, tasks: taskStats };
+}
+
+// ──────────────────────────────────────────────
+// User Operations
+// ──────────────────────────────────────────────
+
+/** Create a new user account. */
+export async function createUser(data: NewUser): Promise<User> {
+  const [user] = await db.insert(users).values(data).returning();
+  return user;
+}
+
+/** Get a user by email. */
+export async function getUserByEmail(email: string): Promise<User | undefined> {
+  return db.query.users.findFirst({
+    where: eq(users.email, email.toLowerCase()),
+  });
+}
+
+/** Get a user by ID. */
+export async function getUserById(userId: string): Promise<User | undefined> {
+  return db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+}
+
+/** Update user record. */
+export async function updateUser(
+  userId: string,
+  data: Partial<User>
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
+/** Verify user email with token. */
+export async function verifyUserEmail(
+  token: string
+): Promise<User | undefined> {
+  const user = await db.query.users.findFirst({
+    where: and(
+      eq(users.verificationToken, token),
+      gt(users.verificationExpiresAt, new Date())
+    ),
+  });
+
+  if (user) {
+    await db
+      .update(users)
+      .set({
+        isVerified: true,
+        verificationToken: null,
+        verificationExpiresAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id));
+  }
+
+  return user;
+}
+
+/** Increment failed login attempts. */
+export async function incrementFailedLogin(userId: string): Promise<number> {
+  const [result] = await db
+    .update(users)
+    .set({
+      failedLoginAttempts: sql`${users.failedLoginAttempts} + 1`,
+    })
+    .where(eq(users.id, userId))
+    .returning({ attempts: users.failedLoginAttempts });
+  return result?.attempts ?? 0;
+}
+
+/** Reset failed login attempts on successful login. */
+export async function resetFailedLogin(userId: string): Promise<void> {
+  await db
+    .update(users)
+    .set({
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
+/** Lock user account for a duration. */
+export async function lockUser(
+  userId: string,
+  until: Date
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ lockedUntil: until })
+    .where(eq(users.id, userId));
+}
+
+/** Link a node to a user (Node Provider). */
+export async function linkNodeToUser(
+  userId: string,
+  nodeId: string
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ linkedNodeId: nodeId, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
+/** Get all users (admin). */
+export async function getAllUsers(): Promise<User[]> {
+  return db.query.users.findMany({
+    orderBy: desc(users.createdAt),
+  });
+}
+
+// ──────────────────────────────────────────────
+// API Key Operations
+// ──────────────────────────────────────────────
+
+/** Create a new API key (stores hash only). */
+export async function createApiKey(data: NewApiKey): Promise<ApiKey> {
+  const [key] = await db.insert(apiKeys).values(data).returning();
+  return key;
+}
+
+/** Get an API key by its SHA-256 hash. */
+export async function getApiKeyByHash(
+  keyHash: string
+): Promise<(ApiKey & { user?: User }) | undefined> {
+  const key = await db.query.apiKeys.findFirst({
+    where: and(
+      eq(apiKeys.keyHash, keyHash),
+      eq(apiKeys.isRevoked, false)
+    ),
+    with: { user: true },
+  });
+
+  if (key) {
+    // Check expiry
+    if (key.expiresAt && key.expiresAt < new Date()) {
+      return undefined;
+    }
+    // Update last used
+    await db
+      .update(apiKeys)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(apiKeys.id, key.id));
+  }
+
+  return key as any;
+}
+
+/** Get all API keys for a user. */
+export async function getUserApiKeys(userId: string): Promise<ApiKey[]> {
+  return db.query.apiKeys.findMany({
+    where: and(
+      eq(apiKeys.userId, userId),
+      eq(apiKeys.isRevoked, false)
+    ),
+    orderBy: desc(apiKeys.createdAt),
+  });
+}
+
+/** Revoke an API key. */
+export async function revokeApiKey(
+  keyId: string,
+  userId: string
+): Promise<boolean> {
+  const result = await db
+    .update(apiKeys)
+    .set({ isRevoked: true })
+    .where(
+      and(eq(apiKeys.id, keyId), eq(apiKeys.userId, userId))
+    )
+    .returning();
+  return result.length > 0;
+}
+
+// ──────────────────────────────────────────────
+// Pairing Code Operations
+// ──────────────────────────────────────────────
+
+/** Create a pairing code for a node. */
+export async function createPairingCode(
+  data: NewPairingCode
+): Promise<PairingCode> {
+  const [code] = await db.insert(pairingCodes).values(data).returning();
+  return code;
+}
+
+/** Get a valid (unused, unexpired) pairing code. */
+export async function getPairingCode(
+  code: string
+): Promise<PairingCode | undefined> {
+  return db.query.pairingCodes.findFirst({
+    where: and(
+      eq(pairingCodes.code, code),
+      eq(pairingCodes.isUsed, false),
+      gt(pairingCodes.expiresAt, new Date())
+    ),
+  });
+}
+
+/** Mark a pairing code as used and link user. */
+export async function usePairingCode(
+  code: string,
+  userId: string
+): Promise<PairingCode | undefined> {
+  const [updated] = await db
+    .update(pairingCodes)
+    .set({
+      isUsed: true,
+      userId,
+    })
+    .where(
+      and(
+        eq(pairingCodes.code, code),
+        eq(pairingCodes.isUsed, false),
+        gt(pairingCodes.expiresAt, new Date())
+      )
+    )
+    .returning();
+  return updated;
+}
+
+// ──────────────────────────────────────────────
+// User Task Queries
+// ──────────────────────────────────────────────
+
+/** Get tasks submitted by a specific user (paginated). */
+export async function getUserTasks(
+  userId: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<Task[]> {
+  return db.query.tasks.findMany({
+    where: eq(tasks.submittedByUserId, userId),
+    orderBy: desc(tasks.submittedAt),
+    limit,
+    offset,
+  });
+}
+
+/** Get task count per status for a user. */
+export async function getUserTaskStats(
+  userId: string
+): Promise<{ total: number; completed: number; failed: number; pending: number }> {
+  const [stats] = await db
+    .select({
+      total: count(),
+      completed: sql<number>`COUNT(*) FILTER (WHERE ${tasks.status} = 'COMPLETED')`,
+      failed: sql<number>`COUNT(*) FILTER (WHERE ${tasks.status} = 'FAILED')`,
+      pending: sql<number>`COUNT(*) FILTER (WHERE ${tasks.status} IN ('PENDING', 'QUEUED', 'CLONED', 'IN_PROGRESS'))`,
+    })
+    .from(tasks)
+    .where(eq(tasks.submittedByUserId, userId));
+
+  return stats ?? { total: 0, completed: 0, failed: 0, pending: 0 };
+}
+
+/** Get all nodes (admin). */
+export async function getAllNodes(): Promise<Node[]> {
+  return db.query.nodes.findMany({
+    orderBy: desc(nodes.lastSeenAt),
+  });
 }

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANTP — Decentralized Edge Compute Dashboard</title>
+  <meta name="description" content="Monitor and manage the ANTP decentralized edge-compute network. Submit tasks, track execution, and view node performance in real-time." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ═══════════════════════════════════════════
+         AUTH SCREEN (Login / Signup)
+         ═══════════════════════════════════════════ -->
+    <div id="auth-screen" class="auth-screen">
+      <div class="auth-card">
+        <div class="brand" style="justify-content: center; margin-bottom: 28px;">
+          <div class="brand-logo">A</div>
+          <div class="brand-name">ANTP <span>Platform</span></div>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form">
+          <h2 class="auth-title">Sign In</h2>
+          <p class="auth-subtitle">Access your decentralized compute dashboard</p>
+
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email</label>
+            <input class="form-input" type="email" id="login-email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input class="form-input" type="password" id="login-password" placeholder="••••••••" required minlength="8" />
+          </div>
+
+          <div id="login-error" class="auth-error" style="display: none;"></div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">Sign In</button>
+
+          <div class="auth-switch">
+            Don't have an account? <a href="#" id="show-signup">Create one</a>
+          </div>
+        </form>
+
+        <!-- Signup Form (hidden by default) -->
+        <form id="signup-form" class="auth-form" style="display: none;">
+          <h2 class="auth-title">Create Account</h2>
+          <p class="auth-subtitle">Join the decentralized compute network</p>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-name">Full Name</label>
+            <input class="form-input" type="text" id="signup-name" placeholder="John Doe" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-email">Email</label>
+            <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password</label>
+            <input class="form-input" type="password" id="signup-password" placeholder="Minimum 8 characters" required minlength="8" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-role">I want to</label>
+            <select class="form-select" id="signup-role">
+              <option value="DEVELOPER">Submit Tasks (Developer)</option>
+              <option value="NODE_PROVIDER">Provide Compute (Node Provider)</option>
+            </select>
+          </div>
+
+          <div id="signup-error" class="auth-error" style="display: none;"></div>
+          <div id="signup-success" class="auth-success" style="display: none;"></div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="signup-btn">Create Account</button>
+
+          <div class="auth-switch">
+            Already have an account? <a href="#" id="show-login">Sign in</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MAIN DASHBOARD (shown after login)
+         ═══════════════════════════════════════════ -->
+    <div id="dashboard-screen" style="display: none;">
+
+      <!-- Top Nav -->
+      <nav class="top-nav">
+        <div class="brand">
+          <div class="brand-logo">A</div>
+          <div class="brand-name">ANTP <span>Dashboard</span></div>
+        </div>
+        <div class="nav-status">
+          <div class="live-indicator">
+            <div class="live-dot" id="live-dot"></div>
+            <span id="live-status">Connecting…</span>
+          </div>
+          <div class="user-menu" id="user-menu">
+            <div class="user-avatar" id="user-avatar">?</div>
+            <div class="user-dropdown" id="user-dropdown" style="display: none;">
+              <div class="dropdown-header">
+                <div class="dropdown-name" id="dropdown-name">User</div>
+                <div class="dropdown-email" id="dropdown-email">user@example.com</div>
+                <span class="badge badge-accent" id="dropdown-role">DEVELOPER</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" id="btn-logout">🚪 Logout</button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Tab Navigation (role-aware) -->
+      <div class="tab-nav" id="tab-nav"></div>
+
+      <!-- ═══ Overview Tab ═══ -->
+      <div class="tab-panel" id="panel-overview">
+        <div class="stats-grid" id="overview-stats">
+          <div class="stat-card">
+            <div class="stat-label">Connected Nodes</div>
+            <div class="stat-value accent" id="stat-nodes">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Tasks</div>
+            <div class="stat-value" id="stat-total-tasks">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value green" id="stat-completed">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">In Queue</div>
+            <div class="stat-value amber" id="stat-pending">—</div>
+          </div>
+        </div>
+        <div class="section-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Queue Depth</div>
+              <span class="badge badge-accent" id="queue-total-badge">—</span>
+            </div>
+            <div class="tier-grid">
+              <div class="tier-card t1"><div class="tier-name">Tier 1</div><div class="tier-count" id="queue-t1">—</div></div>
+              <div class="tier-card t2"><div class="tier-name">Tier 2</div><div class="tier-count" id="queue-t2">—</div></div>
+              <div class="tier-card t3"><div class="tier-name">Tier 3</div><div class="tier-count" id="queue-t3">—</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Node Distribution</div>
+              <span class="badge badge-online" id="nodes-online-badge">—</span>
+            </div>
+            <div class="tier-grid">
+              <div class="tier-card t1"><div class="tier-name">Tier 1</div><div class="tier-count" id="nodes-t1">—</div></div>
+              <div class="tier-card t2"><div class="tier-name">Tier 2</div><div class="tier-count" id="nodes-t2">—</div></div>
+              <div class="tier-card t3"><div class="tier-name">Tier 3</div><div class="tier-count" id="nodes-t3">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">System Health</div>
+            <span class="badge badge-online" id="health-badge">Healthy</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Uptime</div><div class="stat-value" id="stat-uptime" style="font-size:20px;">—</div></div>
+            <div class="stat-card"><div class="stat-label">Cloud Fallbacks</div><div class="stat-value amber" id="stat-fallbacks">—</div></div>
+            <div class="stat-card"><div class="stat-label">Failed Tasks</div><div class="stat-value" id="stat-failed" style="color:var(--red);">—</div></div>
+            <div class="stat-card"><div class="stat-label">SLA Timeout</div><div class="stat-value" id="stat-sla-timeout" style="font-size:20px;">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Submit Task Tab (DEVELOPER only) ═══ -->
+      <div class="tab-panel" id="panel-submit">
+        <div class="section-grid">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Submit Compute Task</div></div>
+            <form id="submit-form" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label">WebAssembly Module</label>
+                <div class="file-upload" id="wasm-upload">
+                  <input type="file" id="wasm-file" accept=".wasm" />
+                  <div class="file-upload-icon">📦</div>
+                  <div class="file-upload-text"><strong>Drop .wasm file</strong> or click to browse</div>
+                  <div class="file-upload-name" id="wasm-file-name"></div>
+                </div>
+                <div class="form-hint">Empty module runs in echo mode (returns input as output)</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="task-input">Input Payload</label>
+                <textarea class="form-textarea" id="task-input" placeholder="Enter input data for the compute function..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="task-tier">Target Tier</label>
+                <select class="form-select" id="task-tier">
+                  <option value="TIER_1">Tier 1 — Lightweight ($0.001/task)</option>
+                  <option value="TIER_2">Tier 2 — Standard ($0.020/task)</option>
+                  <option value="TIER_3">Tier 3 — VIP Heavy ($0.500/task)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="task-timeout">SLA Timeout (ms)</label>
+                <input class="form-input" type="number" id="task-timeout" value="5000" min="1000" max="60000" step="1000" />
+              </div>
+              <button type="submit" class="btn btn-primary btn-full" id="submit-btn">🚀 Submit to Network</button>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Submission Result</div></div>
+            <div id="submit-result">
+              <div class="empty-state">
+                <div class="empty-state-icon">📡</div>
+                <div class="empty-state-title">No Task Submitted</div>
+                <div class="empty-state-desc">Fill out the form and click Submit to dispatch a compute task.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ My Tasks Tab (DEVELOPER only) ═══ -->
+      <div class="tab-panel" id="panel-my-tasks">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">My Task History</div>
+            <div class="flex gap-sm">
+              <span class="badge badge-accent" id="my-tasks-total">0 tasks</span>
+            </div>
+          </div>
+          <div id="my-tasks-list">
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <div class="empty-state-title">No Tasks Yet</div>
+              <div class="empty-state-desc">Submit your first task to see it here.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Task Tracker Tab ═══ -->
+      <div class="tab-panel" id="panel-tracker">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Track Task By ID</div></div>
+          <div class="search-bar">
+            <input class="form-input" type="text" id="tracker-task-id" placeholder="Paste Task ID..." />
+            <button class="btn btn-primary btn-sm" id="tracker-btn">Track</button>
+          </div>
+          <div id="tracker-result">
+            <div class="empty-state">
+              <div class="empty-state-icon">🔍</div>
+              <div class="empty-state-title">Enter a Task ID</div>
+              <div class="empty-state-desc">Paste the Task ID to see real-time execution status and consensus progress.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ My Nodes Tab (NODE_PROVIDER only) ═══ -->
+      <div class="tab-panel" id="panel-my-nodes">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">My Node Fleet</div>
+            <button class="btn btn-secondary btn-sm" id="pair-node-btn">🔗 Pair New Node</button>
+          </div>
+          <div id="my-nodes-content">
+            <div class="empty-state">
+              <div class="empty-state-icon">🖥️</div>
+              <div class="empty-state-title">No Nodes Paired</div>
+              <div class="empty-state-desc">Open your ANTP Edge Daemon app, copy the pairing code, and click "Pair New Node" above.</div>
+            </div>
+          </div>
+        </div>
+        <!-- Pairing Modal -->
+        <div class="modal-overlay" id="pair-modal" style="display: none;">
+          <div class="modal-card">
+            <h3 class="modal-title">Pair Your Node</h3>
+            <p class="modal-desc">Enter the 6-character pairing code shown in your ANTP Edge Daemon app.</p>
+            <input class="form-input" type="text" id="pair-code-input" placeholder="ABC123" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; text-transform: uppercase;" />
+            <div class="flex gap-sm mt-md">
+              <button class="btn btn-primary" id="pair-confirm-btn">Pair Node</button>
+              <button class="btn btn-secondary" id="pair-cancel-btn">Cancel</button>
+            </div>
+            <div id="pair-error" class="auth-error mt-sm" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Earnings Tab (NODE_PROVIDER only) ═══ -->
+      <div class="tab-panel" id="panel-earnings">
+        <div class="stats-grid" id="earnings-stats">
+          <div class="stat-card"><div class="stat-label">Unpaid Balance</div><div class="stat-value green" id="earn-balance">$0.000</div></div>
+          <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value accent" id="earn-total">$0.000</div></div>
+          <div class="stat-card"><div class="stat-label">Tasks Completed</div><div class="stat-value" id="earn-tasks">0</div></div>
+          <div class="stat-card"><div class="stat-label">Reputation</div><div class="stat-value green" id="earn-reputation">100.0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Payout History</div></div>
+          <div id="earnings-history">
+            <div class="empty-state">
+              <div class="empty-state-icon">💰</div>
+              <div class="empty-state-title">No Payouts Yet</div>
+              <div class="empty-state-desc">Complete verified tasks to start earning.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ API Keys Tab (DEVELOPER only) ═══ -->
+      <div class="tab-panel" id="panel-api-keys">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">API Keys</div>
+            <button class="btn btn-primary btn-sm" id="create-key-btn">+ New Key</button>
+          </div>
+          <p class="form-hint mb-md">Use API keys for programmatic access. Include them as: <code style="color: var(--accent-light);">Authorization: ApiKey antp_xxx</code></p>
+          <div id="new-key-display" style="display: none;" class="result-panel mb-md">
+            <div class="result-row">
+              <span class="result-key">⚠️ Your New Key (shown once)</span>
+              <span class="result-value mono" id="new-key-value" style="color: var(--green); cursor: pointer;" title="Click to copy"></span>
+            </div>
+          </div>
+          <div id="api-keys-list">
+            <div class="empty-state">
+              <div class="empty-state-icon">🔑</div>
+              <div class="empty-state-title">No API Keys</div>
+              <div class="empty-state-desc">Generate an API key for programmatic task submission.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Pricing Tab ═══ -->
+      <div class="tab-panel" id="panel-pricing">
+        <div style="text-align: center; margin-bottom: 28px;">
+          <h2 style="font-size: 24px; font-weight: 700;">Compute Pricing</h2>
+          <p style="color: var(--text-secondary); font-size: 14px;">Pay per verified task. Consensus-backed. SLA-guaranteed.</p>
+        </div>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <div class="pricing-tier">Tier 1</div>
+            <div class="pricing-rate">$0.001 <span class="pricing-rate-unit">/task</span></div>
+            <div class="pricing-desc">Lightweight edge nodes for simple transforms.</div>
+            <ul class="pricing-specs">
+              <li><span class="spec-check">✓</span> Up to 4 GB RAM</li>
+              <li><span class="spec-check">✓</span> CPU-only execution</li>
+              <li><span class="spec-check">✓</span> 2-of-3 consensus</li>
+              <li><span class="spec-check">✓</span> SLA timeout protection</li>
+            </ul>
+          </div>
+          <div class="pricing-card featured">
+            <div class="pricing-tier">Tier 2</div>
+            <div class="pricing-rate">$0.020 <span class="pricing-rate-unit">/task</span></div>
+            <div class="pricing-desc">Standard nodes with GPU acceleration.</div>
+            <ul class="pricing-specs">
+              <li><span class="spec-check">✓</span> 8–32 GB RAM</li>
+              <li><span class="spec-check">✓</span> GPU accelerated</li>
+              <li><span class="spec-check">✓</span> 2-of-3 consensus</li>
+              <li><span class="spec-check">✓</span> Priority queue scheduling</li>
+            </ul>
+          </div>
+          <div class="pricing-card">
+            <div class="pricing-tier">Tier 3 — VIP</div>
+            <div class="pricing-rate">$0.500 <span class="pricing-rate-unit">/task</span></div>
+            <div class="pricing-desc">High-end workstations for heavy workloads.</div>
+            <ul class="pricing-specs">
+              <li><span class="spec-check">✓</span> 32+ GB RAM</li>
+              <li><span class="spec-check">✓</span> High-end GPU (CUDA/Metal)</li>
+              <li><span class="spec-check">✓</span> 2-of-3 consensus</li>
+              <li><span class="spec-check">✓</span> Fastest SLA enforcement</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Node Lookup Tab ═══ -->
+      <div class="tab-panel" id="panel-node-lookup">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Node Lookup</div></div>
+          <div class="search-bar">
+            <input class="form-input" type="text" id="node-lookup-id" placeholder="Paste Node ID..." />
+            <button class="btn btn-primary btn-sm" id="node-lookup-btn">Lookup</button>
+          </div>
+          <div id="node-result">
+            <div class="empty-state">
+              <div class="empty-state-icon">🖥️</div>
+              <div class="empty-state-title">Enter a Node ID</div>
+              <div class="empty-state-desc">Look up any edge node to see specs, reputation, and earnings.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        ANTP v0.1.0 — Decentralized Edge-Compute Orchestration &nbsp;·&nbsp;
+        <a href="https://github.com/mayooreshmoodanwal/ANTP" target="_blank">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

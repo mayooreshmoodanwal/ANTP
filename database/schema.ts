@@ -101,6 +101,12 @@ export const evictionReasonEnum = pgEnum("eviction_reason", [
   "MANUAL",
 ]);
 
+export const userRoleEnum = pgEnum("user_role", [
+  "DEVELOPER",
+  "NODE_PROVIDER",
+  "ADMIN",
+]);
+
 // ──────────────────────────────────────────────
 // Tables
 // ──────────────────────────────────────────────
@@ -188,6 +194,9 @@ export const tasks = pgTable(
 
     // Client callback
     clientCallbackUrl: varchar("client_callback_url", { length: 2048 }),
+
+    // User who submitted (null for legacy/anonymous tasks)
+    submittedByUserId: uuid("submitted_by_user_id").references(() => users.id, { onDelete: "set null" }),
 
     // Timestamps
     submittedAt: timestamp("submitted_at").notNull().defaultNow(),
@@ -377,10 +386,123 @@ export const ragDocuments = pgTable(
 );
 
 // ──────────────────────────────────────────────
+// User & Auth Tables
+// ──────────────────────────────────────────────
+
+/**
+ * Users — Platform accounts for developers, node providers, and admins.
+ * Passwords are bcrypt-hashed (12 salt rounds).
+ */
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+    name: varchar("name", { length: 128 }).notNull(),
+    role: userRoleEnum("role").notNull().default("DEVELOPER"),
+
+    // Email verification
+    isVerified: boolean("is_verified").notNull().default(false),
+    verificationToken: varchar("verification_token", { length: 128 }),
+    verificationExpiresAt: timestamp("verification_expires_at"),
+
+    // Node Provider linking
+    linkedNodeId: varchar("linked_node_id", { length: 128 }),
+
+    // Rate limiting
+    failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+    lockedUntil: timestamp("locked_until"),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_users_email").on(table.email),
+    index("idx_users_role").on(table.role),
+    index("idx_users_linked_node").on(table.linkedNodeId),
+  ]
+);
+
+/**
+ * API Keys — Programmatic access tokens for developers.
+ * Keys are SHA-256 hashed; only the prefix is stored for display.
+ */
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    keyHash: varchar("key_hash", { length: 64 }).notNull().unique(),
+    keyPrefix: varchar("key_prefix", { length: 12 }).notNull(),
+    name: varchar("name", { length: 128 }).notNull(),
+    permissions: jsonb("permissions").notNull().default('{"submitTask":true,"readStats":true}'),
+
+    lastUsedAt: timestamp("last_used_at"),
+    expiresAt: timestamp("expires_at"),
+    isRevoked: boolean("is_revoked").notNull().default(false),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_api_keys_user").on(table.userId),
+    uniqueIndex("idx_api_keys_hash").on(table.keyHash),
+    index("idx_api_keys_prefix").on(table.keyPrefix),
+  ]
+);
+
+/**
+ * Pairing Codes — Temporary codes for auto-linking edge daemons to user accounts.
+ * The .dmg app generates a 6-char code, user enters it in the dashboard.
+ */
+export const pairingCodes = pgTable(
+  "pairing_codes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 8 }).notNull().unique(),
+    nodeId: varchar("node_id", { length: 128 }).notNull(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    isUsed: boolean("is_used").notNull().default(false),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_pairing_code").on(table.code),
+    index("idx_pairing_node").on(table.nodeId),
+  ]
+);
+
+// ──────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────
 
-export const tasksRelations = relations(tasks, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+  tasks: many(tasks),
+  apiKeys: many(apiKeys),
+  pairingCodes: many(pairingCodes),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
+
+export const pairingCodesRelations = relations(pairingCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [pairingCodes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const tasksRelations = relations(tasks, ({ one, many }) => ({
+  submittedBy: one(users, {
+    fields: [tasks.submittedByUserId],
+    references: [users.id],
+  }),
   clones: many(taskClones),
   results: many(taskResults),
   payouts: many(payouts),
@@ -447,3 +569,9 @@ export type NewPayout = typeof payouts.$inferInsert;
 export type EvictionLogEntry = typeof evictionLog.$inferSelect;
 export type RagDocument = typeof ragDocuments.$inferSelect;
 export type NewRagDocument = typeof ragDocuments.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
+export type PairingCode = typeof pairingCodes.$inferSelect;
+export type NewPairingCode = typeof pairingCodes.$inferInsert;

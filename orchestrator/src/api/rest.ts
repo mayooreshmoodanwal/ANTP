@@ -9,6 +9,7 @@ import { connectedNodes } from "../ws/server.js";
 import { initiateRagPipeline, getPipelineState } from "../rag/pipeline.js";
 import { getNodeEarnings, getTierRates } from "../economics/payout.js";
 import { getSlaStatus } from "../sla/monitor.js";
+import { authenticateRequest } from "./middleware.js";
 import * as dbQueries from "../../../database/queries.js";
 
 /**
@@ -49,11 +50,29 @@ export function registerRestApi(app: TemplatedApp): void {
   // ── Submit Task ──
   app.post("/api/task", (res, req) => {
     let aborted = false;
+    const authHeader = req.getHeader("authorization");
     res.onAborted(() => { aborted = true; });
 
     readJson(res, req, async (body: any) => {
       if (aborted) return;
       try {
+        // Authenticate request
+        const auth = await authenticateRequest(authHeader);
+        if (!auth) {
+          if (!aborted) jsonResponse(res, 401, {
+            error: "Authentication required. Login or use an API key.",
+          });
+          return;
+        }
+
+        // Check role
+        if (auth.user.role !== "DEVELOPER" && auth.user.role !== "ADMIN") {
+          if (!aborted) jsonResponse(res, 403, {
+            error: "Only DEVELOPER or ADMIN accounts can submit tasks",
+          });
+          return;
+        }
+
         if (!body || !body.tier) {
           if (!aborted) jsonResponse(res, 400, {
             error: "Missing required field: tier",
@@ -122,6 +141,15 @@ export function registerRestApi(app: TemplatedApp): void {
           await dbQueries.createClones(dbTask.id, familyId);
         } catch (err) {
           console.error("[REST] DB error creating task:", err);
+        }
+
+        // Track task ownership
+        if (auth?.user?.id) {
+          try {
+            await dbQueries.updateTaskStatus(taskId, "CLONED", {
+              submittedByUserId: auth.user.id,
+            } as any);
+          } catch {}
         }
 
         if (!aborted) jsonResponse(res, 201, {
