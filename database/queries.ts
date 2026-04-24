@@ -591,12 +591,14 @@ export async function updateUser(
     .where(eq(users.id, userId));
 }
 
-/** Verify user email with token. */
+/** Verify user email with OTP code. */
 export async function verifyUserEmail(
+  email: string,
   token: string
 ): Promise<User | undefined> {
   const user = await db.query.users.findFirst({
     where: and(
+      eq(users.email, email.toLowerCase()),
       eq(users.verificationToken, token),
       gt(users.verificationExpiresAt, new Date())
     ),

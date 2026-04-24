@@ -103,14 +103,6 @@ async function apiFetch(path, options = {}) {
 // Init & Auth Flow
 // ─────────────────────────────────────────────
 async function initApp() {
-  // Check for email verification token in URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const verifyToken = urlParams.get('verify');
-  if (verifyToken) {
-    await verifyEmail(verifyToken);
-    return;
-  }
-
   // Attempt to resume session
   if (authToken) {
     try {
@@ -182,6 +174,13 @@ function initAuthUI() {
   $('#show-login')?.addEventListener('click', (e) => {
     e.preventDefault();
     hide('signup-form');
+    hide('otp-form');
+    show('login-form');
+  });
+
+  $('#back-to-login')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    hide('otp-form');
     show('login-form');
   });
 
@@ -244,15 +243,48 @@ function initAuthUI() {
       sucBox.style.display = 'block';
       setTimeout(() => {
         hide('signup-form');
-        show('login-form');
-        $('#login-email').value = $('#signup-email').value;
-      }, 3000);
+        show('otp-form');
+      }, 1500);
     } catch (err) {
       errBox.textContent = err.message;
       errBox.style.display = 'block';
     } finally {
       btn.disabled = false;
       btn.textContent = 'Create Account';
+    }
+  });
+
+  // OTP Submit
+  $('#otp-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('#otp-btn');
+    const errBox = $('#otp-error');
+    errBox.style.display = 'none';
+
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+
+    const email = $('#signup-email').value; // from signup form memory
+    const otp = $('#otp-code').value;
+
+    try {
+      const res = await apiFetch('/api/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+      });
+      
+      // Auto-login after verification
+      authToken = res.token;
+      localStorage.setItem('antp_jwt', authToken);
+      currentUser = res.user;
+      showToast('Account verified successfully!', 'success');
+      renderApp();
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Verify Account';
     }
   });
 
@@ -269,26 +301,6 @@ function initAuthUI() {
   document.addEventListener('click', () => {
     hide('user-dropdown');
   });
-}
-
-async function verifyEmail(token) {
-  try {
-    const res = await apiFetch('/api/auth/verify', {
-      method: 'POST',
-      body: JSON.stringify({ token })
-    });
-    
-    // Auto-login after verification
-    authToken = res.token;
-    localStorage.setItem('antp_jwt', authToken);
-    currentUser = res.user;
-    showToast('Email verified successfully!', 'success');
-    renderApp();
-  } catch (err) {
-    showToast(`Verification failed: ${err.message}`, 'error');
-    show('auth-screen');
-    hide('dashboard-screen');
-  }
 }
 
 function logout() {

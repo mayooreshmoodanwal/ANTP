@@ -80,6 +80,26 @@
             Already have an account? <a href="#" id="show-login">Sign in</a>
           </div>
         </form>
+
+        <!-- OTP Verification Form (hidden by default) -->
+        <form id="otp-form" class="auth-form" style="display: none;">
+          <h2 class="auth-title">Verify Email</h2>
+          <p class="auth-subtitle">Enter the 6-digit code sent to your email.</p>
+
+          <div class="form-group">
+            <label class="form-label" for="otp-code">Verification Code</label>
+            <input class="form-input" type="text" id="otp-code" placeholder="123456" required maxlength="6" style="font-size: 24px; letter-spacing: 8px; text-align: center;" />
+          </div>
+
+          <div id="otp-error" class="auth-error" style="display: none;"></div>
+          <div id="otp-success" class="auth-success" style="display: none;"></div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="otp-btn">Verify Account</button>
+
+          <div class="auth-switch">
+            <a href="#" id="back-to-login">Back to Login</a>
+          </div>
+        </form>
       </div>
     </div>
 

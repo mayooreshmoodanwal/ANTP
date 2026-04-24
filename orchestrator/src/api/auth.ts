@@ -80,8 +80,8 @@ export function registerAuthApi(app: TemplatedApp): void {
         // Hash password
         const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-        // Generate verification token
-        const verificationToken = randomBytes(32).toString("hex");
+        // Generate 6-digit OTP verification token
+        const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
         const verificationExpiresAt = new Date(
           Date.now() + VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000
         );
@@ -113,33 +113,28 @@ export function registerAuthApi(app: TemplatedApp): void {
                   <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 8px;">Welcome to ANTP</h1>
                   <p style="color: #8b95b0; font-size: 14px; margin-bottom: 24px;">Decentralized Edge-Compute Platform</p>
                   <p style="font-size: 14px; line-height: 1.6;">Hi ${name},</p>
-                  <p style="font-size: 14px; line-height: 1.6;">Click the button below to verify your email and activate your account:</p>
-                  <a href="${DASHBOARD_URL}?verify=${verificationToken}" 
-                     style="display: inline-block; padding: 12px 32px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 16px 0;">
-                    Verify Email
-                  </a>
-                  <p style="font-size: 12px; color: #5a6380; margin-top: 24px;">This link expires in 24 hours. If you didn't create this account, ignore this email.</p>
+                  <p style="font-size: 14px; line-height: 1.6;">Use the following Verification Code to activate your account:</p>
+                  <div style="background: #111827; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
+                    <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3b82f6;">${verificationToken}</span>
+                  </div>
+                  <p style="font-size: 12px; color: #5a6380; margin-top: 24px;">This code expires in 24 hours. If you didn't create this account, ignore this email.</p>
                 </div>
               `,
             });
-            console.log(`[Auth] Verification email sent to ${email}`);
+            console.log(`[Auth] Verification OTP sent to ${email}`);
           } catch (err) {
             console.error("[Auth] Failed to send verification email:", err);
           }
         } else {
-          console.log(`[Auth] No RESEND_API_KEY — verification token: ${verificationToken}`);
+          console.log(`[Auth] No RESEND_API_KEY — verification OTP: ${verificationToken}`);
         }
 
         if (!aborted) {
           jsonResponse(res, 201, {
-            userId: user.id,
             email: user.email,
-            name: user.name,
-            role: user.role,
-            isVerified: false,
             message: resend
-              ? "Account created. Check your email for verification link."
-              : "Account created. Email verification skipped (no mail service configured).",
+              ? "Account created. Check your email for the verification code."
+              : "Account created. Check console logs for your OTP.",
           });
         }
       } catch (err: any) {
@@ -249,7 +244,7 @@ export function registerAuthApi(app: TemplatedApp): void {
     });
   });
 
-  // ── Verify Email ──
+  // ── Verify Email (OTP) ──
   app.post("/api/auth/verify", (res, req) => {
     let aborted = false;
     res.onAborted(() => { aborted = true; });
@@ -257,15 +252,15 @@ export function registerAuthApi(app: TemplatedApp): void {
     readJson(res, req, async (body: any) => {
       if (aborted) return;
       try {
-        if (!body?.token) {
-          jsonResponse(res, 400, { error: "Missing verification token" });
+        if (!body?.email || !body?.otp) {
+          jsonResponse(res, 400, { error: "Missing email or OTP code" });
           return;
         }
 
-        const user = await dbQueries.verifyUserEmail(body.token);
+        const user = await dbQueries.verifyUserEmail(body.email, body.otp);
         if (!user) {
           jsonResponse(res, 400, {
-            error: "Invalid or expired verification token",
+            error: "Invalid or expired verification code",
           });
           return;
         }
