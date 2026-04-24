@@ -105,7 +105,7 @@ export function registerAuthApi(app: TemplatedApp): void {
         if (resend) {
           try {
             await resend.emails.send({
-              from: "ANTP <noreply@antp.dev>",
+              from: process.env.RESEND_FROM || "ANTP <onboarding@resend.dev>",
               to: email,
               subject: "Verify your ANTP account",
               html: `
@@ -208,8 +208,9 @@ export function registerAuthApi(app: TemplatedApp): void {
         // Check email verification
         if (!user.isVerified) {
           jsonResponse(res, 403, {
-            error: "Email not verified. Check your inbox for the verification link.",
+            error: "Email not verified. Check your inbox for the verification code.",
             needsVerification: true,
+            email: user.email,
           });
           return;
         }
@@ -637,7 +638,8 @@ function readJson(
   let buffer = Buffer.alloc(0);
   let aborted = false;
 
-  res.onAborted(() => { aborted = true; });
+  // NOTE: Do NOT call res.onAborted here — the route handler already set it.
+  // uWebSockets.js only allows one onAborted callback; calling it again replaces the previous.
 
   res.onData((chunk, isLast) => {
     if (aborted) return;

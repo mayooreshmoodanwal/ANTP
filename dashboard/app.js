@@ -208,8 +208,16 @@ function initAuthUI() {
       currentUser = res.user;
       renderApp();
     } catch (err) {
-      errBox.textContent = err.message;
-      errBox.style.display = 'block';
+      // Check if account exists but needs verification
+      if (err.message && err.message.includes('not verified')) {
+        // Redirect to OTP form
+        hide('login-form');
+        show('otp-form');
+        showToast('Please enter the verification code sent to your email.', 'info');
+      } else {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+      }
     } finally {
       btn.disabled = false;
       btn.textContent = 'Sign In';
@@ -241,6 +249,8 @@ function initAuthUI() {
 
       sucBox.textContent = res.message;
       sucBox.style.display = 'block';
+      // Persist email for OTP step (survives page refresh)
+      localStorage.setItem('antp_signup_email', $('#signup-email').value);
       setTimeout(() => {
         hide('signup-form');
         show('otp-form');
@@ -264,8 +274,16 @@ function initAuthUI() {
     btn.disabled = true;
     btn.textContent = 'Verifying...';
 
-    const email = $('#signup-email').value; // from signup form memory
+    const email = $('#signup-email')?.value || localStorage.getItem('antp_signup_email') || $('#login-email')?.value;
     const otp = $('#otp-code').value;
+
+    if (!email) {
+      errBox.textContent = 'Email not found. Please sign up again.';
+      errBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Verify Account';
+      return;
+    }
 
     try {
       const res = await apiFetch('/api/auth/verify', {
@@ -276,6 +294,7 @@ function initAuthUI() {
       // Auto-login after verification
       authToken = res.token;
       localStorage.setItem('antp_jwt', authToken);
+      localStorage.removeItem('antp_signup_email');
       currentUser = res.user;
       showToast('Account verified successfully!', 'success');
       renderApp();

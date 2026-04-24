@@ -344,8 +344,8 @@ function jsonResponse(res: HttpResponse, status: number, data: any): void {
         .writeStatus(statusTexts[status] || `${status}`)
         .writeHeader("Content-Type", "application/json")
         .writeHeader("Access-Control-Allow-Origin", "*")
-        .writeHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        .writeHeader("Access-Control-Allow-Headers", "Content-Type")
+        .writeHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        .writeHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
         .end(JSON.stringify(data));
     });
   } catch {
@@ -362,9 +362,8 @@ function readJson(
   let buffer = Buffer.alloc(0);
   let aborted = false;
 
-  res.onAborted(() => {
-    aborted = true;
-  });
+  // NOTE: Do NOT call res.onAborted here — the route handler already set it.
+  // uWebSockets.js only allows one onAborted callback; calling it again replaces the previous.
 
   res.onData((chunk, isLast) => {
     if (aborted) return;
