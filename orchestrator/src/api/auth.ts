@@ -105,7 +105,7 @@ export function registerAuthApi(app: TemplatedApp): void {
         if (resend) {
           try {
             await resend.emails.send({
-              from: process.env.RESEND_FROM || "ANTP <onboarding@resend.dev>",
+              from: `${process.env.RESEND_FROM_NAME || "ANTP"} <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
               to: email,
               subject: "Verify your ANTP account",
               html: `
