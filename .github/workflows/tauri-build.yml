@@ -1,0 +1,46 @@
+name: "Release Edge Daemon"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'edge-daemon/**'
+  workflow_dispatch:
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest] # Only building for Windows since you can build Mac locally. We can add macos-latest here if you want both.
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies
+        run: npm install
+        working-directory: ./edge-daemon
+
+      - name: build tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./edge-daemon
+          tagName: v__VERSION__
+          releaseName: 'Edge Daemon v__VERSION__'
+          releaseBody: 'Download the .msi file below to install the ANTP Edge Daemon on Windows.'
+          releaseDraft: true
+          prerelease: false
