@@ -8,6 +8,8 @@ const els = {
   nodeId: document.getElementById('node-id'),
   tierBadge: document.getElementById('tier-badge'),
   statusText: document.getElementById('status-text'),
+  pairingSection: document.getElementById('pairing-section'),
+  pairingCodeDisplay: document.getElementById('pairing-code-display'),
   tasksCompleted: document.getElementById('tasks-completed'),
   tasksProgress: document.getElementById('tasks-progress'),
   totalEarnings: document.getElementById('total-earnings'),
@@ -59,6 +61,14 @@ async function updateDashboard() {
     els.nodeId.textContent = status.node_id || 'Generating...';
     els.tierBadge.textContent = tierNames[status.tier] || status.tier;
     els.statusText.textContent = status.status;
+
+    // Pairing code UI
+    if (status.pairing_code) {
+      els.pairingSection.style.display = 'block';
+      els.pairingCodeDisplay.textContent = status.pairing_code;
+    } else {
+      els.pairingSection.style.display = 'none';
+    }
 
     // Stats
     els.tasksCompleted.textContent = status.tasks_completed.toLocaleString();

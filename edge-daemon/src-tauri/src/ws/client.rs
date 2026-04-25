@@ -86,6 +86,8 @@ enum WsMessage {
         #[serde(rename = "nodeDbId")]
         node_db_id: String,
         error: Option<String>,
+        #[serde(rename = "pairingCode")]
+        pairing_code: Option<String>,
     },
     TASK_ASSIGNMENT {
         #[serde(rename = "taskId")]
@@ -342,6 +344,7 @@ async fn handle_server_message(
             tier,
             node_db_id,
             error,
+            pairing_code,
         } => {
             if success {
                 info!(
@@ -352,6 +355,9 @@ async fn handle_server_message(
                 let mut s = status.write();
                 s.tier = tier;
                 s.status = "IDLE".to_string();
+                if pairing_code.is_some() {
+                    s.pairing_code = pairing_code;
+                }
             } else {
                 error!(
                     "[WS] ❌ Registration failed: {}",

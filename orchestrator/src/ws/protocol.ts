@@ -57,6 +57,7 @@ export interface RegisterAckMessage {
   tier: string;
   nodeDbId: string;
   error?: string;
+  pairingCode?: string;
 }
 
 export interface TaskStealMessage {

@@ -144,6 +144,28 @@ body {
   border-color: rgba(59, 130, 246, 0.2);
 }
 
+.card--pairing {
+  border-color: rgba(16, 185, 129, 0.2);
+  margin-top: 12px;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.pairing-code {
+  font-family: 'Geist Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--accent-success);
+  margin: 8px 0;
+  text-align: center;
+}
+
+.pairing-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .card-label {
   font-size: 11px;
   color: var(--text-muted);

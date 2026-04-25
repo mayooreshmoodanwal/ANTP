@@ -747,13 +747,34 @@ export async function createPairingCode(
   return code;
 }
 
-/** Get a valid (unused, unexpired) pairing code. */
+/** Get a valid (unused, unexpired) pairing code by code string. */
 export async function getPairingCode(
   code: string
 ): Promise<PairingCode | undefined> {
   return db.query.pairingCodes.findFirst({
     where: and(
       eq(pairingCodes.code, code),
+      eq(pairingCodes.isUsed, false),
+      gt(pairingCodes.expiresAt, new Date())
+    ),
+  });
+}
+
+/** Check if a node is already paired to a user. */
+export async function isNodePaired(nodeId: string): Promise<boolean> {
+  const code = await db.query.pairingCodes.findFirst({
+    where: and(eq(pairingCodes.nodeId, nodeId), eq(pairingCodes.isUsed, true)),
+  });
+  return !!code;
+}
+
+/** Get an existing unused pairing code for a node. */
+export async function getUnusedPairingCodeForNode(
+  nodeId: string
+): Promise<PairingCode | undefined> {
+  return db.query.pairingCodes.findFirst({
+    where: and(
+      eq(pairingCodes.nodeId, nodeId),
       eq(pairingCodes.isUsed, false),
       gt(pairingCodes.expiresAt, new Date())
     ),

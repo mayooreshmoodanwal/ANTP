@@ -26,6 +26,7 @@ pub struct DaemonStatus {
     pub gpu_model: String,
     pub total_ram_mb: u64,
     pub available_ram_mb: u64,
+    pub pairing_code: Option<String>,
 }
 
 impl Default for DaemonStatus {
@@ -44,6 +45,7 @@ impl Default for DaemonStatus {
             gpu_model: "None".to_string(),
             total_ram_mb: 0,
             available_ram_mb: 0,
+            pairing_code: None,
         }
     }
 }

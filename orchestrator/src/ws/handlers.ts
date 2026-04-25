@@ -172,6 +172,28 @@ async function handleNodeRegister(
     );
   }
 
+  let pairingCode: string | undefined;
+  const isPaired = await dbQueries.isNodePaired(nodeId);
+  if (!isPaired) {
+    const existingCode = await dbQueries.getUnusedPairingCodeForNode(nodeId);
+    if (existingCode) {
+      pairingCode = existingCode.code;
+    } else {
+      const codeStr = Math.floor(100000 + Math.random() * 900000).toString();
+      try {
+        await dbQueries.createPairingCode({
+          code: codeStr,
+          nodeId: nodeId,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        });
+        pairingCode = codeStr;
+        console.log(`[Handler] Generated pairing code ${codeStr} for node ${nodeId.slice(0, 8)}...`);
+      } catch (err) {
+        console.error(`[Handler] Error generating pairing code:`, err);
+      }
+    }
+  }
+
   // Send acknowledgement
   ws.send(
     encodeMessage({
@@ -179,6 +201,7 @@ async function handleNodeRegister(
       success: true,
       tier,
       nodeDbId: dbNode.id,
+      pairingCode,
     }),
     true
   );
