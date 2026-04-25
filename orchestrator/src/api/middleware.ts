@@ -52,7 +52,7 @@ export async function initializeKeys(): Promise<void> {
 }
 
 async function generateNewKeys(): Promise<void> {
-  const keyPair = await generateKeyPair("ES256");
+  const keyPair = await generateKeyPair("ES256", { extractable: true });
   privateKey = keyPair.privateKey;
   publicKey = keyPair.publicKey;
 
