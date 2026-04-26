@@ -127,6 +127,7 @@ export function registerRestApi(app: TemplatedApp): void {
         // Persist to DB
         try {
           const dbTask = await dbQueries.createTask({
+            id: taskId,
             familyId,
             type: "COMPUTE",
             status: "CLONED",
@@ -137,19 +138,11 @@ export function registerRestApi(app: TemplatedApp): void {
             slaTimeoutMs: timeoutMs,
             slaDeadlineAt: new Date(slaDeadlineAt),
             clientCallbackUrl: body.callbackUrl,
+            submittedByUserId: auth?.user?.id || null,
           });
           await dbQueries.createClones(dbTask.id, familyId);
         } catch (err) {
           console.error("[REST] DB error creating task:", err);
-        }
-
-        // Track task ownership
-        if (auth?.user?.id) {
-          try {
-            await dbQueries.updateTaskStatus(taskId, "CLONED", {
-              submittedByUserId: auth.user.id,
-            } as any);
-          } catch {}
         }
 
         if (!aborted) jsonResponse(res, 201, {

@@ -118,9 +118,9 @@ export async function initiateRagPipeline(request: RagRequest): Promise<{
       timeoutMs: config.slaTimeoutMs,
     });
 
-    // Also persist to DB
     try {
       const dbTask = await dbQueries.createTask({
+        id: taskId,
         familyId,
         type: "RAG_MAP",
         status: "CLONED",
@@ -296,9 +296,9 @@ async function executePhase3(
     timeoutMs: config.slaTimeoutMs * 5,
   });
 
-  // Persist to DB
   try {
     const dbTask = await dbQueries.createTask({
+      id: taskId,
       familyId,
       type: "RAG_REDUCE",
       status: "CLONED",
