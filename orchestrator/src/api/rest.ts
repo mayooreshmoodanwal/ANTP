@@ -8,7 +8,7 @@ import { createAndEnqueueClones } from "../consensus/clone.js";
 import { connectedNodes } from "../ws/server.js";
 import { initiateRagPipeline, getPipelineState } from "../rag/pipeline.js";
 import { getNodeEarnings, getTierRates } from "../economics/payout.js";
-import { getSlaStatus } from "../sla/monitor.js";
+import { getSlaStatus, trackTaskSla } from "../sla/monitor.js";
 import { authenticateRequest } from "./middleware.js";
 import * as dbQueries from "../../../database/queries.js";
 
@@ -151,8 +151,11 @@ export function registerRestApi(app: TemplatedApp): void {
           tier,
           cloneIds: cloneSet.cloneIds,
           slaDeadlineAt: new Date(slaDeadlineAt).toISOString(),
-          status: "CLONED",
+          status: "QUEUED",
         });
+
+        // Start SLA tracking
+        trackTaskSla(taskId, timeoutMs);
       } catch (err: any) {
         console.error("[REST] Error submitting task:", err);
         if (!aborted) jsonResponse(res, 500, { error: err.message });

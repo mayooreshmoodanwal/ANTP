@@ -112,7 +112,7 @@ async function runConsensus(taskId: string): Promise<ConsensusResult> {
     hashGroups.set(result.resultHash, group);
   }
 
-  // Find majority (≥2 matching hashes)
+  // Find majority (≥2 matching hashes or fuzzy match)
   let majorityHash: string | null = null;
   let majorityEntries: Array<{
     cloneId: string;
@@ -122,18 +122,58 @@ async function runConsensus(taskId: string): Promise<ConsensusResult> {
   let dissenterEntries: Array<{ cloneId: string; nodeId: string }> = [];
   let allDisagree = false;
 
-  for (const [hash, entries] of hashGroups) {
-    if (entries.length >= config.consensusMajority) {
-      majorityHash = hash;
-      majorityEntries = entries;
-      break;
+  // First, attempt numerical fuzzy match (Flaw 3: Wasm Non-Determinism)
+  const parsedResults = Array.from(task.results.entries()).map(([cloneId, result]) => {
+    let numVal: number | null = null;
+    try {
+      const str = Buffer.from(result.output).toString("utf-8");
+      const parsed = JSON.parse(str);
+      if (typeof parsed === "number") numVal = parsed;
+      else if (typeof parsed === "string" && !isNaN(parseFloat(parsed))) numVal = parseFloat(parsed);
+    } catch {
+      try {
+        const str = Buffer.from(result.output).toString("utf-8").trim();
+        if (str && !isNaN(parseFloat(str))) numVal = parseFloat(str);
+      } catch {}
+    }
+    return { cloneId, result, numVal };
+  });
+
+  const validNumbers = parsedResults.filter((r) => r.numVal !== null);
+
+  if (validNumbers.length >= config.consensusMajority) {
+    for (const target of validNumbers) {
+      const matches = validNumbers.filter(
+        (r) => Math.abs(r.numVal! - target.numVal!) < 0.00001
+      );
+      if (matches.length >= config.consensusMajority) {
+        majorityHash = target.result.resultHash; // Use the target's hash as the "accepted" hash
+        majorityEntries = matches.map((m) => ({
+          cloneId: m.cloneId,
+          nodeId: m.result.nodeId,
+          output: m.result.output,
+        }));
+        break;
+      }
+    }
+  }
+
+  // Fallback to strict hash comparison if fuzzy match failed or wasn't numerical
+  if (!majorityHash) {
+    for (const [hash, entries] of hashGroups) {
+      if (entries.length >= config.consensusMajority) {
+        majorityHash = hash;
+        majorityEntries = entries;
+        break;
+      }
     }
   }
 
   if (majorityHash) {
     // Identify dissenters
     for (const [cloneId, result] of task.results) {
-      if (result.resultHash !== majorityHash) {
+      const isMajority = majorityEntries.some((e) => e.cloneId === cloneId);
+      if (!isMajority) {
         dissenterEntries.push({ cloneId, nodeId: result.nodeId });
       }
     }

@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { config } from "../config.js";
 import { taskStore, type TaskPayload } from "../state/task-store.js";
 import { createAndEnqueueClones } from "../consensus/clone.js";
+import { trackTaskSla } from "../sla/monitor.js";
 import * as dbQueries from "../../../database/queries.js";
 
 /**
@@ -70,7 +71,6 @@ export async function initiateRagPipeline(request: RagRequest): Promise<{
   for (let i = 0; i < chunks.length; i++) {
     const taskId = uuidv4();
     const familyId = uuidv4();
-    taskIds.push(taskId);
 
     // Create a lightweight WASM-like payload for vectorisation
     // In production, this would be a real vectorisation WASM module
@@ -139,6 +139,9 @@ export async function initiateRagPipeline(request: RagRequest): Promise<{
     } catch (err) {
       console.error(`[RAG] DB error creating chunk task ${i}:`, err);
     }
+
+    trackTaskSla(taskId, config.slaTimeoutMs);
+    taskIds.push(taskId);
   }
 
   console.log(
@@ -317,6 +320,8 @@ async function executePhase3(
   } catch (err) {
     console.error(`[RAG] DB error creating reduce task:`, err);
   }
+
+  trackTaskSla(taskId, config.slaTimeoutMs * 5);
 
   console.log(
     `[RAG] Phase 3: Reduce task ${taskId.slice(0, 8)}... dispatched to TIER_3 queue`

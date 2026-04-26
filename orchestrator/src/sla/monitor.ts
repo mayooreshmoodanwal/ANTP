@@ -13,7 +13,7 @@ import * as dbQueries from "../../../database/queries.js";
  * 3. Cloud Shadow Server response is returned to client within contracted SLA window
  */
 
-let monitorInterval: ReturnType<typeof setInterval> | null = null;
+const slaTimers = new Map<string, NodeJS.Timeout>();
 let isRunning = false;
 
 // Callback registry for delivering results to WebSocket connections
@@ -35,113 +35,141 @@ export function onTaskResult(cb: ResultCallback): void {
 }
 
 /**
- * Start the SLA monitoring loop.
- * Checks every 100ms for tasks that have exceeded their SLA deadline.
+ * Start the SLA monitoring subsystem.
  */
 export function startSlaMonitor(): void {
   if (isRunning) return;
   isRunning = true;
 
   console.log(
-    `[SLA] Monitor started (interval=${config.slaMonitorIntervalMs}ms, timeout=${config.slaTimeoutMs}ms)`
+    `[SLA] Event-driven Monitor started (timeout=${config.slaTimeoutMs}ms)`
   );
-
-  monitorInterval = setInterval(async () => {
-    try {
-      await checkSlaBreaches();
-    } catch (err) {
-      console.error("[SLA] Monitor error:", err);
-    }
-  }, config.slaMonitorIntervalMs);
 }
 
 /**
- * Stop the SLA monitoring loop.
+ * Stop the SLA monitoring subsystem.
  */
 export function stopSlaMonitor(): void {
-  if (monitorInterval) {
-    clearInterval(monitorInterval);
-    monitorInterval = null;
+  for (const timer of slaTimers.values()) {
+    clearTimeout(timer);
   }
+  slaTimers.clear();
   isRunning = false;
   console.log("[SLA] Monitor stopped");
 }
 
 /**
- * Core SLA check — find breached tasks and trigger cloud fallback.
+ * Track a task's SLA deadline via an event-driven timer.
+ * @param taskId The task to track
+ * @param timeoutMs The SLA deadline in milliseconds
  */
-async function checkSlaBreaches(): Promise<void> {
-  const breachedTasks = taskStore.getSlaBreachedTasks();
+export function trackTaskSla(taskId: string, timeoutMs: number): void {
+  if (!isRunning) return;
 
-  for (const task of breachedTasks) {
-    console.warn(
-      `[SLA] ⚠️  Task ${task.taskId.slice(0, 8)}... breached SLA ` +
-        `(deadline was ${new Date(task.slaDeadlineAt).toISOString()}, ` +
-        `elapsed=${Date.now() - task.submittedAt}ms)`
+  // Clear any existing timer just in case
+  clearTaskSla(taskId);
+
+  const timer = setTimeout(async () => {
+    slaTimers.delete(taskId);
+    await enforceSlaBreach(taskId);
+  }, timeoutMs);
+
+  slaTimers.set(taskId, timer);
+}
+
+/**
+ * Clear a task's SLA timer (e.g., if it successfully reaches consensus early).
+ */
+export function clearTaskSla(taskId: string): void {
+  const timer = slaTimers.get(taskId);
+  if (timer) {
+    clearTimeout(timer);
+    slaTimers.delete(taskId);
+  }
+}
+
+/**
+ * Core SLA check — trigger cloud fallback for a specific breached task.
+ */
+async function enforceSlaBreach(taskId: string): Promise<void> {
+  const task = taskStore.getTask(taskId);
+  if (!task) return; // Task no longer in store
+
+  // Check if it's still active and hasn't already fallen back
+  if (
+    task.usedCloudFallback ||
+    !["QUEUED", "CLONED", "IN_PROGRESS", "CONSENSUS_PENDING"].includes(task.status)
+  ) {
+    return;
+  }
+
+  console.warn(
+    `[SLA] ⚠️  Task ${task.taskId.slice(0, 8)}... breached SLA ` +
+      `(deadline was ${new Date(task.slaDeadlineAt).toISOString()}, ` +
+      `elapsed=${Date.now() - task.submittedAt}ms)`
+  );
+
+  // Mark as SLA breached in store
+  taskStore.updateStatus(task.taskId, "SLA_BREACHED");
+
+  // Remove any remaining queued clones
+  queueManager.removeByTaskId(task.taskId);
+
+  // Forward to Cloud Shadow Server
+  try {
+    const cloudResponse = await forwardToCloud({
+      taskId: task.taskId,
+      familyId: task.familyId,
+      tier: task.tier,
+      wasmBytes: task.payload.wasmBytes,
+      input: task.payload.input,
+      timeoutMs: config.cloudFallbackTimeoutMs,
+      reason: "SLA_TIMEOUT",
+    });
+
+    // Mark task as cloud fallback
+    taskStore.markCloudFallback(task.taskId);
+
+    // Update DB
+    try {
+      await dbQueries.updateTaskStatus(task.taskId, "CLOUD_FALLBACK", {
+        usedCloudFallback: true,
+        acceptedResultHash: cloudResponse.resultHash || null,
+        completedAt: new Date(),
+      });
+    } catch (dbErr) {
+      console.error("[SLA] DB error updating cloud fallback task:", dbErr);
+    }
+
+    // Deliver result to client
+    if (cloudResponse.status === "OK" && resultCallback) {
+      resultCallback(
+        task.taskId,
+        cloudResponse.output,
+        cloudResponse.resultHash,
+        "CLOUD"
+      );
+    }
+
+    console.log(
+      `[SLA] Task ${task.taskId.slice(0, 8)}... resolved via cloud fallback ` +
+        `(status=${cloudResponse.status})`
+    );
+  } catch (err) {
+    console.error(
+      `[SLA] Cloud fallback failed for ${task.taskId.slice(0, 8)}...:`,
+      err
     );
 
-    // Mark as SLA breached in store
-    taskStore.updateStatus(task.taskId, "SLA_BREACHED");
-
-    // Remove any remaining queued clones
-    queueManager.removeByTaskId(task.taskId);
-
-    // Forward to Cloud Shadow Server
+    // Last resort — mark as failed
+    taskStore.updateStatus(task.taskId, "FAILED");
     try {
-      const cloudResponse = await forwardToCloud({
-        taskId: task.taskId,
-        familyId: task.familyId,
-        tier: task.tier,
-        wasmBytes: task.payload.wasmBytes,
-        input: task.payload.input,
-        timeoutMs: config.cloudFallbackTimeoutMs,
-        reason: "SLA_TIMEOUT",
+      await dbQueries.updateTaskStatus(task.taskId, "FAILED", {
+        usedCloudFallback: true,
+        completedAt: new Date(),
       });
-
-      // Mark task as cloud fallback
-      taskStore.markCloudFallback(task.taskId);
-
-      // Update DB
-      try {
-        await dbQueries.updateTaskStatus(task.taskId, "CLOUD_FALLBACK", {
-          usedCloudFallback: true,
-          acceptedResultHash: cloudResponse.resultHash || null,
-          completedAt: new Date(),
-        });
-      } catch (dbErr) {
-        console.error("[SLA] DB error updating cloud fallback task:", dbErr);
-      }
-
-      // Deliver result to client
-      if (cloudResponse.status === "OK" && resultCallback) {
-        resultCallback(
-          task.taskId,
-          cloudResponse.output,
-          cloudResponse.resultHash,
-          "CLOUD"
-        );
-      }
-
-      console.log(
-        `[SLA] Task ${task.taskId.slice(0, 8)}... resolved via cloud fallback ` +
-          `(status=${cloudResponse.status})`
-      );
-    } catch (err) {
-      console.error(
-        `[SLA] Cloud fallback failed for ${task.taskId.slice(0, 8)}...:`,
-        err
-      );
-
-      // Last resort — mark as failed
-      taskStore.updateStatus(task.taskId, "FAILED");
-      try {
-        await dbQueries.updateTaskStatus(task.taskId, "FAILED", {
-          usedCloudFallback: true,
-          completedAt: new Date(),
-        });
-      } catch (dbErr) {
-        console.error("[SLA] DB error marking task failed:", dbErr);
-      }
+    } catch (dbErr) {
+      console.error("[SLA] DB error marking task failed:", dbErr);
     }
   }
 }

@@ -5,6 +5,7 @@ import { registerAuthApi } from "./api/auth.js";
 import { initializeKeys } from "./api/middleware.js";
 import { startSlaMonitor, onTaskResult } from "./sla/monitor.js";
 import { taskStore } from "./state/task-store.js";
+import { recoverStateOnBoot } from "./state/recovery.js";
 
 /**
  * ANTP Orchestrator — Main Entry Point
@@ -19,6 +20,9 @@ import { taskStore } from "./state/task-store.js";
  */
 
 async function main() {
+  // Recover state from unexpected crashes
+  await recoverStateOnBoot();
+
   // Initialize ECDSA keys for JWT signing
   await initializeKeys();
   console.log(`
