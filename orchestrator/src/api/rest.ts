@@ -199,6 +199,103 @@ export function registerRestApi(app: TemplatedApp): void {
     });
   });
 
+  // ── Task SSE Stream (real-time push updates) ──
+  app.get("/api/task/:id/stream", (res, req) => {
+    const taskId = req.getParameter(0);
+    let aborted = false;
+
+    res.onAborted(() => {
+      aborted = true;
+    });
+
+    // SSE headers
+    res.writeHeader("Content-Type", "text/event-stream");
+    res.writeHeader("Cache-Control", "no-cache");
+    res.writeHeader("Connection", "keep-alive");
+    res.writeHeader("Access-Control-Allow-Origin", "*");
+
+    // Helper to send SSE data
+    const sendEvent = (data: any) => {
+      if (aborted) return;
+      try {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      } catch {}
+    };
+
+    // Send initial state immediately
+    const sendSnapshot = () => {
+      const task = taskStore.getTask(taskId);
+      if (!task) {
+        sendEvent({ error: "Task not found" });
+        if (!aborted) { try { res.end(); } catch {} }
+        return false;
+      }
+
+      const results: Record<string, any> = {};
+      for (const [cloneId, result] of task.results) {
+        results[cloneId] = {
+          nodeId: result.nodeId,
+          resultHash: result.resultHash,
+          execTimeMs: result.execTimeMs,
+          status: result.status,
+          outputSize: result.output.byteLength,
+        };
+      }
+
+      sendEvent({
+        taskId: task.taskId,
+        familyId: task.familyId,
+        tier: task.tier,
+        status: task.status,
+        submittedAt: new Date(task.submittedAt).toISOString(),
+        slaDeadlineAt: new Date(task.slaDeadlineAt).toISOString(),
+        cloneIds: task.cloneIds,
+        completedClones: Array.from(task.completedClones),
+        assignedNodes: Object.fromEntries(task.assignedNodes),
+        results,
+        usedCloudFallback: task.usedCloudFallback,
+      });
+
+      return !["COMPLETED", "FAILED", "SLA_BREACHED", "CLOUD_FALLBACK"].includes(task.status);
+    };
+
+    // Send initial snapshot
+    const shouldContinue = sendSnapshot();
+
+    if (shouldContinue) {
+      // Poll every 200ms and push only when state changes (far lighter than client polling)
+      let lastStatus = "";
+      let lastResultCount = 0;
+      const interval = setInterval(() => {
+        if (aborted) {
+          clearInterval(interval);
+          return;
+        }
+
+        const task = taskStore.getTask(taskId);
+        if (!task) {
+          clearInterval(interval);
+          if (!aborted) { try { res.end(); } catch {} }
+          return;
+        }
+
+        // Only push if something changed
+        if (task.status !== lastStatus || task.results.size !== lastResultCount) {
+          lastStatus = task.status;
+          lastResultCount = task.results.size;
+          const stillActive = sendSnapshot();
+          if (!stillActive) {
+            clearInterval(interval);
+            if (!aborted) { try { res.end(); } catch {} }
+          }
+        }
+      }, 200);
+    } else {
+      // Task already terminal, close after sending
+      if (!aborted) { try { res.end(); } catch {} }
+    }
+  });
+
   // ── Node Stats ──
   app.get("/api/node/:id/stats", async (res, req) => {
     const nodeId = req.getParameter(0);

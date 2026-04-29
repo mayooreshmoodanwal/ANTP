@@ -20,6 +20,9 @@ export interface WsUserData {
 /** Map of nodeId → WebSocket for broadcasting. */
 export const connectedNodes = new Map<string, WebSocket<WsUserData>>();
 
+/** Map of nodeId → public IP address for Sybil resistance. */
+export const nodeIpMap = new Map<string, string>();
+
 /**
  * Create and configure the uWebSockets.js application.
  * Returns the app instance (not yet listening).

@@ -48,10 +48,10 @@ export class QueueManager {
    * Work stealing — node pulls a task from its tier queue.
    * Anti-affinity is enforced by the TierQueue.
    */
-  steal(tier: string, nodeId: string): QueueItem | null {
+  steal(tier: string, nodeId: string, sameIpNodeIds: string[] = []): QueueItem | null {
     const queue = this.queues.get(tier);
     if (!queue) return null;
-    return queue.steal(nodeId);
+    return queue.steal(nodeId, sameIpNodeIds);
   }
 
   /** Release anti-affinity for a node/family pair. */

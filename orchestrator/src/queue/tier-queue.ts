@@ -99,7 +99,7 @@ export class TierQueue {
    *
    * Returns null if no eligible task is available for this node.
    */
-  steal(nodeId: string): QueueItem | null {
+  steal(nodeId: string, sameIpNodeIds: string[] = []): QueueItem | null {
     for (let i = 0; i < this.queue.length; i++) {
       const item = this.queue[i];
       const familyNodes = this.familyNodeMap.get(item.familyId);
@@ -107,6 +107,14 @@ export class TierQueue {
       // Anti-affinity check: skip if this node already has a clone from this family
       if (familyNodes?.has(nodeId)) {
         continue;
+      }
+
+      // Sybil resistance: skip if any node on the same IP already has a clone
+      if (sameIpNodeIds.length > 0 && familyNodes) {
+        const ipConflict = sameIpNodeIds.some((ipNodeId) =>
+          familyNodes.has(ipNodeId)
+        );
+        if (ipConflict) continue;
       }
 
       // Eligible! Remove from queue and record assignment.

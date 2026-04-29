@@ -847,10 +847,60 @@ function initTracker() {
   });
 }
 
+let activeEventSource = null;
+
 async function trackTask() {
   const taskId = $('#tracker-task-id').value.trim();
   if (!taskId) return;
 
+  // Close any existing SSE connection
+  if (activeEventSource) {
+    activeEventSource.close();
+    activeEventSource = null;
+  }
+
+  // Try SSE first for real-time streaming
+  try {
+    const es = new EventSource(`${API_BASE}/api/task/${taskId}/stream`);
+    activeEventSource = es;
+
+    es.onmessage = (event) => {
+      try {
+        const task = JSON.parse(event.data);
+        if (task.error) {
+          setHtml('tracker-result', `
+            <div class="result-panel" style="border-color: var(--red);">
+              <div class="text-center text-red p-4">${task.error}</div>
+            </div>
+          `);
+          es.close();
+          activeEventSource = null;
+          return;
+        }
+        renderTaskStatus(task);
+
+        // Close if terminal
+        if (['COMPLETED', 'FAILED', 'SLA_BREACHED', 'CLOUD_FALLBACK'].includes(task.status)) {
+          es.close();
+          activeEventSource = null;
+        }
+      } catch (parseErr) {
+        console.error('SSE parse error:', parseErr);
+      }
+    };
+
+    es.onerror = () => {
+      // Fallback to REST polling if SSE fails
+      es.close();
+      activeEventSource = null;
+      trackTaskFallback(taskId);
+    };
+  } catch {
+    trackTaskFallback(taskId);
+  }
+}
+
+async function trackTaskFallback(taskId) {
   try {
     const task = await apiFetch(`/api/task/${taskId}/status`);
     renderTaskStatus(task);

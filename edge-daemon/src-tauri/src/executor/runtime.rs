@@ -35,11 +35,14 @@ pub fn execute_wasm_task(
         return Ok(input.to_vec());
     }
 
-    // Configure the Wasmtime engine with strict sandboxing
+    // Configure the Wasmtime engine with strict sandboxing + determinism
     let mut config = Config::new();
-    config.consume_fuel(true); // Enable fuel metering
+    config.consume_fuel(true);        // Enable fuel metering (anti-infinite-loop)
     config.wasm_bulk_memory(true);
     config.wasm_multi_value(true);
+    config.cranelift_nan_canonicalization(true); // Deterministic NaN across ARM/x86
+    config.wasm_threads(false);                 // No threads — deterministic execution
+    config.wasm_simd(false);                    // Disable SIMD — prevents arch-specific rounding
 
     let engine = Engine::new(&config).map_err(|e| format!("Engine init error: {}", e))?;
 

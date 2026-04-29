@@ -1,6 +1,6 @@
 import type { WebSocket } from "uWebSockets.js";
 import type { WsUserData } from "./server.js";
-import { connectedNodes } from "./server.js";
+import { connectedNodes, nodeIpMap } from "./server.js";
 import {
   type AntpMessage,
   MessageType,
@@ -29,6 +29,7 @@ export function handleClose(ws: WebSocket<WsUserData>, code: number): void {
   if (data.nodeId) {
     // Remove from connected nodes registry
     connectedNodes.delete(data.nodeId);
+    nodeIpMap.delete(data.nodeId);
 
     // Mark node as offline in DB
     dbQueries.updateNodeStatus(data.nodeId, "OFFLINE").catch((err) => {
@@ -161,6 +162,9 @@ async function handleNodeRegister(
   // Register in connected nodes map
   connectedNodes.set(nodeId, ws);
 
+  // Track IP for Sybil resistance
+  nodeIpMap.set(nodeId, userData.remoteAddress);
+
   // Subscribe to tier-specific topic for potential broadcasts
   ws.subscribe(`tier:${tier}`);
 
@@ -232,7 +236,14 @@ async function handleTaskSteal(
   }
 
   // Pull from the node's tier queue (anti-affinity enforced by TierQueue)
-  const item = queueManager.steal(userData.tier, userData.nodeId);
+  // Also enforce IP-level anti-affinity (Sybil resistance)
+  const nodeIp = nodeIpMap.get(userData.nodeId);
+  const sameIpNodeIds = nodeIp
+    ? Array.from(nodeIpMap.entries())
+        .filter(([nid, ip]) => ip === nodeIp && nid !== userData.nodeId)
+        .map(([nid]) => nid)
+    : [];
+  const item = queueManager.steal(userData.tier, userData.nodeId, sameIpNodeIds);
 
   if (!item) {
     ws.send(
