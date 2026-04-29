@@ -20,3 +20,10 @@ Cargo.lock
 .idea/
 .vscode/
 *.swp
+
+# Python / ML Brain
+.venv/
+__pycache__/
+*.pyc
+ml-brain/models/*.pkl
+ml-brain/seed_data/

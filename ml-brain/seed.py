@@ -13,7 +13,7 @@ import random
 import uuid
 import numpy as np
 import psycopg2
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
@@ -60,7 +60,7 @@ def generate_synthetic_data():
     # ── Generate Tasks & Results ──
     task_rows = []
     result_rows = []
-    base_time = datetime.utcnow() - timedelta(days=30)
+    base_time = datetime.now(timezone.utc) - timedelta(days=30)
 
     for i in range(NUM_TASKS):
         tier = random.choice(TIERS)

@@ -13,7 +13,7 @@ import os
 import sys
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent to path
 sys.path.insert(0, os.path.dirname(__file__))
@@ -24,7 +24,7 @@ RETRAIN_INTERVAL_HOURS = 24
 
 def retrain_models():
     """Trigger retraining via the FastAPI /retrain endpoint."""
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
     print(f"\n[Cron] {timestamp} — Starting scheduled model retraining...")
 
     try:
@@ -54,7 +54,7 @@ def run_scheduler():
             retrain_models,
             "interval",
             hours=RETRAIN_INTERVAL_HOURS,
-            next_run_time=datetime.utcnow(),  # Run immediately on start
+            next_run_time=datetime.now(timezone.utc),  # Run immediately on start
         )
 
         print(f"[Cron] Scheduler started. Retraining every {RETRAIN_INTERVAL_HOURS} hours.")

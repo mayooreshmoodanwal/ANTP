@@ -15,7 +15,7 @@ import joblib
 from sklearn.ensemble import GradientBoostingRegressor, IsolationForest
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-from datetime import datetime
+from datetime import datetime, timezone
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODELS_DIR, exist_ok=True)
@@ -64,7 +64,7 @@ class SpotPricingModel:
         if self.model is None:
             return self.base_rates.get(tier, 0.001)
 
-        hour = datetime.utcnow().hour
+        hour = datetime.now(timezone.utc).hour
         tier_num = {"TIER_1": 1, "TIER_2": 2, "TIER_3": 3}.get(tier, 1)
         X = self.scaler.transform([[queue_depth, active_nodes, hour, tier_num]])
         price = float(self.model.predict(X)[0])
@@ -143,7 +143,7 @@ class FraudDetector:
         prediction = self.model.predict(X)[0]  # 1 = normal, -1 = anomaly
         score = float(self.model.score_samples(X)[0])
 
-        is_anomalous = prediction == -1
+        is_anomalous = bool(prediction == -1)
         action = "SHADOW_BAN" if is_anomalous else "NONE"
 
         return {
@@ -267,14 +267,14 @@ class TrafficPredictor:
 
     def predict_next_hour(self) -> dict:
         """Predict traffic for the upcoming hour."""
-        current_hour = datetime.utcnow().hour
+        current_hour = datetime.now(timezone.utc).hour
         next_hour = (current_hour + 1) % 24
 
         current_load = float(self.hourly_avg[current_hour])
         next_load = float(self.hourly_avg[next_hour])
 
-        spike = next_load > current_load * 1.5
-        should_prefetch = next_load > 0.7  # Pre-fetch if upcoming hour is >70% of peak
+        spike = bool(next_load > current_load * 1.5)
+        should_prefetch = bool(next_load > 0.7)  # Pre-fetch if upcoming hour is >70% of peak
 
         return {
             "current_hour": current_hour,
