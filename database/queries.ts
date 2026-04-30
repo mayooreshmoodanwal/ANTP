@@ -193,6 +193,13 @@ export async function getSlaBreachedTasks(): Promise<Task[]> {
   });
 }
 
+/** Get all tasks abandoned due to a server restart. */
+export async function getAbandonedTasks(): Promise<Task[]> {
+  return db.query.tasks.findMany({
+    where: inArray(tasks.status, ["QUEUED", "CLONED", "IN_PROGRESS", "CONSENSUS_PENDING"]),
+  });
+}
+
 // ──────────────────────────────────────────────
 // Task Clone Operations
 // ──────────────────────────────────────────────

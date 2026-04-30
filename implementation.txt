@@ -1,0 +1,112 @@
+ATTENTION EXECUTION AGENT (ANTIGRAVITY): This document contains the finalized V2 Architectural Blueprint for the ANTP Decentralized Edge-Compute Network. The core V1 system (Node.js WebSocket Orchestrator, Tauri/Rust Edge Daemon, PostgreSQL/Drizzle DB, Next.js Dashboard) is already functional.
+
+Your objective is to implement the following critical distributed systems patches, security hardening protocols, and a new Python-based Machine Learning Control Plane. Proceed sequentially.
+
+Phase 1: Core System Hardening & Bug Fixes
+1. Event-Driven SLA Management (Orchestrator)
+Current State: The SLA monitor uses a setInterval loop every 100ms to scan an array/database of tasks to check for 2.0s timeouts. This will block the Node.js event loop at scale.
+
+Implementation Required: Refactor sla/monitor.ts to be purely event-driven.
+
+When a task is dispatched, instantiate a native Node.js setTimeout for exactly the SLA duration (e.g., 2000ms), mapped to the task_id.
+
+If consensus is reached before the timeout, clearTimeout(taskId).
+
+If the timeout fires, immediately trigger the Cloud Fallback logic and mark the task as FAILED in the database.
+
+2. Orchestrator State Recovery Protocol
+Current State: Active WebSocket connections and pending consensus states are stored in RAM. A server restart leaves tasks permanently stuck in PROCESSING in the PostgreSQL DB.
+
+Implementation Required: Add a boot-sequence function in orchestrator/index.ts.
+
+On startup, query the database for all tasks with status PROCESSING or CONSENSUS_PENDING.
+
+Since the WebSocket connections to edge nodes were lost during the restart, instantly transition these orphaned tasks to FAILED or push them back to QUEUED to prevent zombie states.
+
+3. Wasmtime Sandbox Security (Edge Daemon)
+Current State: The Rust daemon executes .wasm payloads using Wasmtime but lacks compute limits or strict determinism.
+
+Implementation Required in executor/runtime.rs:
+
+Fuel Limits: Configure Wasmtime to inject a strict "Fuel Limit" (compute gas). Every Wasm instruction must consume fuel. If a malicious developer submits an infinite loop (while(true)), Wasmtime must trap the execution when fuel hits zero and return a PAYLOAD_ERROR.
+
+Strict Determinism: Mock or stub the system clock (Date.now()) and random number generators (Math.random()) inside the Wasmtime sandbox. All clones of a task must receive the exact same frozen timestamp and seed, ensuring identical code always produces identical output across different hardware.
+
+4. Fuzzy Math Consensus Engine (Orchestrator)
+Current State: The consensus engine compares strict SHA-256 hashes of the results from 3 nodes.
+
+Implementation Required: Modify consensus/engine.ts. Strict hashing fails on floating-point math due to micro-differences in ARM (Mac) vs. x86 (Windows) rounding.
+
+The engine must parse the JSON output payload.
+
+Implement a "Fuzzy Match" function for numerical outputs (e.g., Math.abs(NodeA_Value - NodeB_Value) < 0.00001). If within the threshold, accept the consensus.
+
+5. True Anti-Affinity & Sybil Resistance (Orchestrator)
+Current State: Anti-affinity only checks the generated Node ID, which can be spoofed by running multiple Docker containers on one machine.
+
+Implementation Required: Update the WS handshake in ws/handlers.ts.
+
+Extract the public IP address of the incoming WebSocket connection.
+
+The anti-affinity assignment logic for the 3 task clones must strictly ensure that no two clones are sent to nodes sharing the same IP address OR the same hardware MAC hash.
+
+Phase 2: Scalability & Network Choking Prevention
+6. Payload Decoupling & Proactive Caching
+Current State: Heavy assets (.wasm files or AI models) are streamed over WebSockets, which will exhaust Orchestrator bandwidth.
+
+Implementation Required: * Orchestrator: Only send a microscopic JSON "Order Ticket" over WebSockets containing a payloadType string and a CDN/S3 URL for the required asset.
+
+Edge Daemon (Rust): Implement a pre-fetch protocol using the reqwest crate. The daemon must download heavy assets from the CDN directly to a local hidden directory (e.g., ~/.antp/models/) independently of the WebSocket stream.
+
+7. Strict LRU Cache Limit (Edge Daemon)
+Implementation Required: To prevent the daemon from filling the user's hard drive, implement a Least Recently Used (LRU) cache manager in Rust.
+
+Enforce a hard storage cap (e.g., 15GB, configurable in Tauri UI).
+
+When a new asset needs to be downloaded and the cap is reached, automatically delete the .wasm file or .gguf model that has gone the longest without receiving a task.
+
+8. SSE / WebSocket UI Updates (Web Dashboard)
+Current State: The Next.js dashboard uses REST polling every 1 second to update the UI task tracker.
+
+Implementation Required: Remove REST polling. Implement Server-Sent Events (SSE) or a direct WebSocket connection from the browser to the Orchestrator. The server must push state changes to the UI only when a task progresses (e.g., Clone 1 finishes).
+
+Phase 3: The AI/ML Control Plane (New Microservice)
+The Orchestrator must be split into a "Data Plane" (the current Node.js WS server) and a new "Control Plane" (a Python ML microservice) to govern the network predictively without blocking Node.js.
+
+9. Python Control Plane Architecture
+Implementation Required: Create a new directory /ml-brain.
+
+Initialize a Python FastAPI server.
+
+Install dependencies: scikit-learn, pandas, psycopg2 (for Postgres connection), uvicorn.
+
+This service will read from the shared PostgreSQL database and expose internal HTTP endpoints for the Node.js server to query.
+
+10. ML Feature Integration
+Implement the following Classical Machine Learning models using scikit-learn:
+
+Dynamic Spot Pricing: Implement Linear Regression or Decision Trees. Input: Current queue depth, active nodes, time of day. Output: Optimal USD price per task.
+
+Fraud Detection: Implement Isolation Forest. Monitor historical node execution times. If a Tier 1 node completes a heavy task suspiciously fast, flag it as anomalous and shadow-ban the node ID.
+
+Smart Hardware Clustering: Implement K-Means Clustering. Group nodes dynamically based on their actual historical execution speed, rather than their raw reported RAM/CPU specs.
+
+Predictive Pre-Fetching: Implement Time-Series Forecasting. Predict traffic spikes from specific developer tags and instruct the Node.js Orchestrator to push cache-download commands to idle nodes before the traffic hits.
+
+11. The "Cold Start" Pipeline
+Implementation Required: Build the ML training pipeline in three stages:
+
+Synthetic Seeding: Expand database/seed.ts to generate 1 million rows of simulated network traffic, including mock traffic spikes and malicious nodes. Train the initial Scikit-Learn models on this data.
+
+Shadow Mode: The Node.js Orchestrator must query the Python FastAPI server for predictions (e.g., pricing), log the AI's answer in the database, but continue using hardcoded static rules to ensure safety during early testing.
+
+The Flywheel: Write a Python cron job (cron.py) that wakes up every 24 hours, queries the latest Postgres data, retrains the Scikit-Learn models, and reloads them into the FastAPI server seamlessly.
+
+
+
+
+
+
+
+
+
