@@ -5,19 +5,31 @@ import * as dbQueries from "../../../database/queries.js";
  * If the Node.js server crashed or was restarted (e.g., by Render), 
  * the in-memory WebSocket connections and task store payloads are lost.
  * 
- * This protocol sweeps the PostgreSQL database for any tasks that were 
- * abandoned mid-execution and gracefully fails them to prevent them from 
- * being stuck in an infinite "IN_PROGRESS" limbo.
+ * This protocol:
+ * 1. Resets ALL node statuses to OFFLINE (since all WebSocket connections are lost)
+ * 2. Sweeps the PostgreSQL database for any tasks that were abandoned mid-execution
+ *    and gracefully fails them to prevent infinite "IN_PROGRESS" limbo.
  */
 export async function recoverStateOnBoot(): Promise<void> {
   console.log("======================================================");
   console.log("[Recovery] Running Orchestrator State Recovery Protocol...");
   
   try {
+    // Step 1: Reset ALL node statuses to OFFLINE
+    // On server restart, all WebSocket connections are lost — no node is actually online.
+    // Without this, nodes remain as "ONLINE" in the DB indefinitely (ghost nodes).
+    const resetCount = await dbQueries.resetAllNodeStatuses();
+    if (resetCount > 0) {
+      console.warn(`[Recovery] ⚠️ Reset ${resetCount} stale nodes to OFFLINE (WebSocket connections lost on restart).`);
+    } else {
+      console.log("[Recovery] No stale nodes found. Node states are clean.");
+    }
+
+    // Step 2: Fail any orphaned tasks stuck in active states
     const abandonedTasks = await dbQueries.getAbandonedTasks();
     
     if (abandonedTasks.length === 0) {
-      console.log("[Recovery] No abandoned tasks found. State is clean.");
+      console.log("[Recovery] No abandoned tasks found. Task state is clean.");
       console.log("======================================================");
       return;
     }

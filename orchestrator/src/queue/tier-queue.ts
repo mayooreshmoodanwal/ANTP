@@ -82,6 +82,13 @@ export class TierQueue {
   enqueuePriority(item: QueueItem): boolean {
     if (this.isFull) return false;
 
+    // Warn when queue is getting close to capacity
+    if (this.queue.length > this.maxDepth * 0.8) {
+      console.warn(
+        `[Queue:${this.tier}] ⚠️ Queue at ${Math.round((this.queue.length / this.maxDepth) * 100)}% capacity (${this.queue.length}/${this.maxDepth})`
+      );
+    }
+
     item.priority = 0;
     this.queue.unshift(item);
     this.totalEnqueued++;

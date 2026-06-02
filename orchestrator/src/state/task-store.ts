@@ -84,6 +84,13 @@ export class TaskStore extends EventEmitter {
   private familyIndex = new Map<string, string>(); // familyId → taskId
   private activeByNode = new Map<string, Set<string>>(); // nodeId → Set<cloneId>
 
+  constructor() {
+    super();
+    // Suppress maxListeners warning — listeners are managed internally
+    // and cleaned up via task lifecycle events
+    this.setMaxListeners(0);
+  }
+
   /** Create a new task in the store. */
   createTask(state: TaskState): void {
     this.tasks.set(state.taskId, state);
@@ -222,9 +229,13 @@ export class TaskStore extends EventEmitter {
     if (task) {
       task.status = "COMPLETED";
 
-      // Clean up node assignments
-      for (const [, nodeId] of task.assignedNodes) {
-        this.activeByNode.get(nodeId)?.delete(taskId);
+      // Clean up node assignments — delete cloneId (not taskId) from each node's active set
+      for (const [cloneId, nodeId] of task.assignedNodes) {
+        this.activeByNode.get(nodeId)?.delete(cloneId);
+        // Remove node entry entirely if it has no more active clones
+        if (this.activeByNode.get(nodeId)?.size === 0) {
+          this.activeByNode.delete(nodeId);
+        }
       }
 
       this.emit("task:completed", task);
@@ -294,6 +305,15 @@ export class TaskStore extends EventEmitter {
       ) {
         this.tasks.delete(taskId);
         this.familyIndex.delete(task.familyId);
+
+        // Clean up activeByNode references to prevent unbounded memory growth
+        for (const [cloneId, nodeId] of task.assignedNodes) {
+          this.activeByNode.get(nodeId)?.delete(cloneId);
+          if (this.activeByNode.get(nodeId)?.size === 0) {
+            this.activeByNode.delete(nodeId);
+          }
+        }
+
         purged++;
       }
     }

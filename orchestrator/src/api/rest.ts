@@ -263,7 +263,7 @@ export function registerRestApi(app: TemplatedApp): void {
     const shouldContinue = sendSnapshot();
 
     if (shouldContinue) {
-      // Poll every 200ms and push only when state changes (far lighter than client polling)
+      // Poll every 500ms and push only when state changes (far lighter than client polling)
       let lastStatus = "";
       let lastResultCount = 0;
       const interval = setInterval(() => {
@@ -275,7 +275,7 @@ export function registerRestApi(app: TemplatedApp): void {
         const task = taskStore.getTask(taskId);
         if (!task) {
           clearInterval(interval);
-          if (!aborted) { try { res.end(); } catch {} }
+          if (!aborted) { try { res.end(); } catch { aborted = true; } }
           return;
         }
 
@@ -286,10 +286,10 @@ export function registerRestApi(app: TemplatedApp): void {
           const stillActive = sendSnapshot();
           if (!stillActive) {
             clearInterval(interval);
-            if (!aborted) { try { res.end(); } catch {} }
+            if (!aborted) { try { res.end(); } catch { aborted = true; } }
           }
         }
-      }, 200);
+      }, 500);
     } else {
       // Task already terminal, close after sending
       if (!aborted) { try { res.end(); } catch {} }
@@ -454,6 +454,7 @@ function readJson(
 ): void {
   let buffer = Buffer.alloc(0);
   let aborted = false;
+  const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB max
 
   // NOTE: Do NOT call res.onAborted here — the route handler already set it.
   // uWebSockets.js only allows one onAborted callback; calling it again replaces the previous.
@@ -462,6 +463,13 @@ function readJson(
     if (aborted) return;
 
     buffer = Buffer.concat([buffer, Buffer.from(chunk)]);
+
+    // Guard against oversized request bodies (OOM protection)
+    if (buffer.length > MAX_BODY_SIZE) {
+      aborted = true;
+      jsonResponse(res, 413, { error: "Request body too large (max 10MB)" });
+      return;
+    }
 
     if (isLast) {
       try {

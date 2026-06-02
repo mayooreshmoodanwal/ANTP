@@ -5,6 +5,9 @@
 
 const API_BASE = 'https://antp-nlc8.onrender.com';
 const POLL_INTERVAL_MS = 5000;
+let consecutiveFailures = 0;
+const BASE_POLL_MS = 5000;
+const MAX_POLL_MS = 60000;
 
 // ─────────────────────────────────────────────
 // State
@@ -447,26 +450,37 @@ async function refreshOverview() {
     ]);
 
     setOnline();
+    consecutiveFailures = 0;
+
+    // Reset poll interval to normal on success
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = setInterval(refreshOverview, BASE_POLL_MS);
+    }
 
     setText('stat-nodes', health.connectedNodes ?? 0);
     setText('stat-total-tasks', systemStats.database?.tasks?.totalTasks ?? 0);
     setText('stat-completed', systemStats.database?.tasks?.completedTasks ?? 0);
     setText('stat-pending', systemStats.database?.tasks?.pendingTasks ?? 0);
 
-    const qTier1 = queueStats.TIER_1?.depth ?? 0;
-    const qTier2 = queueStats.TIER_2?.depth ?? 0;
-    const qTier3 = queueStats.TIER_3?.depth ?? 0;
-    const qTotal = qTier1 + qTier2 + qTier3;
+    // Queue stats — API returns { queues: { TIER_1: { depth, ... } } }
+    const queues = queueStats.queues || queueStats;
+    const qTier1 = queues.TIER_1?.depth ?? 0;
+    const qTier2 = queues.TIER_2?.depth ?? 0;
+    const qTier3 = queues.TIER_3?.depth ?? 0;
+    const qTotal = queueStats.totalDepth ?? (qTier1 + qTier2 + qTier3);
     setText('queue-t1', qTier1);
     setText('queue-t2', qTier2);
     setText('queue-t3', qTier3);
     setText('queue-total-badge', `${qTotal} queued`);
 
-    const nodes = systemStats.database?.nodes || {};
-    setText('nodes-t1', nodes.tier1Nodes ?? 0);
-    setText('nodes-t2', nodes.tier2Nodes ?? 0);
-    setText('nodes-t3', nodes.tier3Nodes ?? 0);
-    setText('nodes-online-badge', `${nodes.onlineNodes ?? 0} online`);
+    const nodeData = systemStats.database?.nodes || {};
+    // Use the live WebSocket count for the online badge (not stale DB count)
+    const liveNodeCount = health.connectedNodes ?? 0;
+    setText('nodes-t1', nodeData.tier1Nodes ?? 0);
+    setText('nodes-t2', nodeData.tier2Nodes ?? 0);
+    setText('nodes-t3', nodeData.tier3Nodes ?? 0);
+    setText('nodes-online-badge', `${liveNodeCount} online`);
 
     setText('stat-uptime', formatUptime(health.uptime ?? 0));
     setText('stat-fallbacks', systemStats.database?.tasks?.cloudFallbacks ?? 0);
@@ -474,6 +488,13 @@ async function refreshOverview() {
     setText('stat-sla-timeout', formatMs(systemStats.sla?.timeoutMs ?? 5000));
   } catch (err) {
     console.warn('[Overview] Refresh failed:', err.message);
+    consecutiveFailures++;
+    // Exponential backoff: 5s → 10s → 20s → 40s → 60s max
+    const backoff = Math.min(BASE_POLL_MS * Math.pow(2, consecutiveFailures), MAX_POLL_MS);
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = setInterval(refreshOverview, backoff);
+    }
   }
 }
 

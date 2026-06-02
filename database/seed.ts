@@ -15,7 +15,7 @@ async function seed() {
     {
       nodeId: "node-tier1-alpha-" + randomUUID().slice(0, 8),
       tier: "TIER_1" as const,
-      status: "ONLINE" as const,
+      status: "OFFLINE" as const,
       cpuCores: 2,
       cpuModel: "Intel Celeron N4020",
       cpuFreqMhz: 1100,
@@ -30,7 +30,7 @@ async function seed() {
     {
       nodeId: "node-tier1-beta-" + randomUUID().slice(0, 8),
       tier: "TIER_1" as const,
-      status: "ONLINE" as const,
+      status: "OFFLINE" as const,
       cpuCores: 4,
       cpuModel: "ARM Cortex-A53",
       cpuFreqMhz: 1400,
@@ -45,7 +45,7 @@ async function seed() {
     {
       nodeId: "node-tier2-gamma-" + randomUUID().slice(0, 8),
       tier: "TIER_2" as const,
-      status: "ONLINE" as const,
+      status: "OFFLINE" as const,
       cpuCores: 8,
       cpuModel: "Apple M2",
       cpuFreqMhz: 3500,
@@ -64,7 +64,7 @@ async function seed() {
     {
       nodeId: "node-tier2-delta-" + randomUUID().slice(0, 8),
       tier: "TIER_2" as const,
-      status: "ONLINE" as const,
+      status: "OFFLINE" as const,
       cpuCores: 12,
       cpuModel: "AMD Ryzen 5 5600X",
       cpuFreqMhz: 3700,
@@ -83,7 +83,7 @@ async function seed() {
     {
       nodeId: "node-tier3-epsilon-" + randomUUID().slice(0, 8),
       tier: "TIER_3" as const,
-      status: "ONLINE" as const,
+      status: "OFFLINE" as const,
       cpuCores: 16,
       cpuModel: "AMD Ryzen 9 7950X",
       cpuFreqMhz: 4500,
@@ -102,7 +102,7 @@ async function seed() {
     {
       nodeId: "node-tier3-zeta-" + randomUUID().slice(0, 8),
       tier: "TIER_3" as const,
-      status: "ONLINE" as const,
+      status: "OFFLINE" as const,
       cpuCores: 24,
       cpuModel: "Intel Xeon W-3375",
       cpuFreqMhz: 2500,

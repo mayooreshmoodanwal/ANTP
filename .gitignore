@@ -27,3 +27,4 @@ __pycache__/
 *.pyc
 ml-brain/models/*.pkl
 ml-brain/seed_data/
+.vercel

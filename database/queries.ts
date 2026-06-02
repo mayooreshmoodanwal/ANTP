@@ -1,4 +1,4 @@
-import { eq, and, sql, inArray, lt, isNull, desc, count, gt } from "drizzle-orm";
+import { eq, and, sql, inArray, lt, isNull, desc, count, gt, ne } from "drizzle-orm";
 import { db, schema } from "./db.js";
 import {
   nodes,
@@ -543,7 +543,7 @@ export async function getSystemStats() {
   const [nodeStats] = await db
     .select({
       totalNodes: count(),
-      onlineNodes: sql<number>`COUNT(*) FILTER (WHERE ${nodes.status} = 'ONLINE')`,
+      onlineNodes: sql<number>`COUNT(*) FILTER (WHERE ${nodes.status} IN ('ONLINE', 'BUSY') AND ${nodes.lastSeenAt} > NOW() - INTERVAL '2 minutes')`,
       tier1Nodes: sql<number>`COUNT(*) FILTER (WHERE ${nodes.tier} = 'TIER_1')`,
       tier2Nodes: sql<number>`COUNT(*) FILTER (WHERE ${nodes.tier} = 'TIER_2')`,
       tier3Nodes: sql<number>`COUNT(*) FILTER (WHERE ${nodes.tier} = 'TIER_3')`,
@@ -561,6 +561,21 @@ export async function getSystemStats() {
     .from(tasks);
 
   return { nodes: nodeStats, tasks: taskStats };
+}
+
+/** Mark all non-OFFLINE/non-BANNED nodes as OFFLINE (used on server boot recovery). */
+export async function resetAllNodeStatuses(): Promise<number> {
+  const result = await db
+    .update(nodes)
+    .set({ status: 'OFFLINE', updatedAt: new Date() })
+    .where(
+      and(
+        ne(nodes.status, 'OFFLINE'),
+        ne(nodes.status, 'BANNED')
+      )
+    )
+    .returning();
+  return result.length;
 }
 
 // ──────────────────────────────────────────────

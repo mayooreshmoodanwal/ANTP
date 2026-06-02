@@ -637,6 +637,7 @@ function readJson(
 ): void {
   let buffer = Buffer.alloc(0);
   let aborted = false;
+  const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB max
 
   // NOTE: Do NOT call res.onAborted here — the route handler already set it.
   // uWebSockets.js only allows one onAborted callback; calling it again replaces the previous.
@@ -644,6 +645,13 @@ function readJson(
   res.onData((chunk, isLast) => {
     if (aborted) return;
     buffer = Buffer.concat([buffer, Buffer.from(chunk)]);
+
+    // Guard against oversized request bodies (OOM protection)
+    if (buffer.length > MAX_BODY_SIZE) {
+      aborted = true;
+      jsonResponse(res, 413, { error: "Request body too large (max 10MB)" });
+      return;
+    }
 
     if (isLast) {
       try {
